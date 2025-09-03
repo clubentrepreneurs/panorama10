@@ -219,12 +219,11 @@
             font-size: 16px;
             z-index: 101;
         }
-
-        /* NOUVEAU STYLE POUR LE BOUTON SCROLL */
-        #scrollButton {
+        
+        /* Styles des nouveaux boutons */
+        .actionButton {
             position: fixed;
             bottom: 20px;
-            right: 20px;
             width: 50px;
             height: 50px;
             border-radius: 50%;
@@ -240,12 +239,25 @@
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             transition: all 0.3s ease;
         }
+        #scrollButton {
+            right: 20px;
+        }
+        #linkButton {
+            right: 80px;
+            font-size: 16px; /* Plus petit pour le texte */
+        }
 
-        /* Règle pour masquer le bouton sur les petits écrans (smartphones) */
+        /* Règle pour masquer le bouton de défilement sur les petits écrans (smartphones) */
         @media (max-width: 768px) {
             #scrollButton {
                 display: none;
             }
+        }
+
+        /* NOUVEAU STYLE POUR LA TRANSITION */
+        body.transition-out {
+            transition: opacity 0.5s ease-in-out;
+            opacity: 0;
         }
     </style>
 </head>
@@ -277,9 +289,12 @@
         <iframe id="videoPlayer" allowfullscreen allow="autoplay; encrypted-media"></iframe>
     </div>
 
-    <button id="scrollButton">
+    <button id="scrollButton" class="actionButton">
         &#x21bb; </button>
     
+    <button id="linkButton" class="actionButton">
+        Go
+    </button>
 
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
     <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
@@ -323,7 +338,6 @@
                 domeMat.useAlphaFromDiffuseTexture = false;
                 domeMat.transparencyMode = BABYLON.Material.MATERIAL_OPAQUE;
             } else {
-                // FIX: Correction de la faute de frappe
                 domeMat.diffuseTexture.hasAlpha = true;
                 domeMat.useAlphaFromDiffuseTexture = true;
                 domeMat.transparencyMode = BABYLON.Material.MATERIAL_ALPHABLEND;
@@ -492,66 +506,71 @@
                 checkAndStartPanoramaIntro();
             });
 
-            // NOUVEAU CODE : Ajout d'un écouteur d'événement pour le bouton de défilement
+            // Ajout de l'écouteur d'événement pour le bouton de défilement
             const scrollButton = document.getElementById('scrollButton');
-            scrollButton.addEventListener('click', () => {
-                // L'incrément de rotation en radians (30 degrés = 30 * Math.PI / 180)
-                const rotationIncrement = 30 * (Math.PI / 180);
+            if (scrollButton) { // S'assurer que le bouton existe
+                scrollButton.addEventListener('click', () => {
+                    const rotationIncrement = 30 * (Math.PI / 180);
+                    BABYLON.Animation.CreateAndStartAnimation(
+                        "scrollCam",
+                        camera,
+                        "alpha",
+                        60,
+                        60,
+                        camera.alpha,
+                        camera.alpha + rotationIncrement,
+                        BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT,
+                        new BABYLON.CubicEase()
+                    );
+                });
+            }
 
-                // Créer une animation pour faire tourner la caméra de 30 degrés
-                BABYLON.Animation.CreateAndStartAnimation(
-                    "scrollCam",
-                    camera,
-                    "alpha",
-                    60, // frames per second
-                    60, // 1 second total animation
-                    camera.alpha,
-                    camera.alpha + rotationIncrement,
-                    BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT,
-                    new BABYLON.CubicEase() // easing
-                );
-            });
+            // NOUVEAU CODE : Gestion de la transition de page
+            const linkButton = document.getElementById('linkButton');
+            if (linkButton) {
+                linkButton.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    // Ajoute la classe de transition au corps de la page
+                    document.body.classList.add('transition-out');
+                    // Attend la fin de l'animation de fondu (0.5s) avant de changer de page
+                    setTimeout(() => {
+                        window.location.href = 'page2.html';
+                    }, 500);
+                });
+            }
         });
 
-        // NOUVELLE FONCTION : Anime la caméra pour créer l'effet tournoyant
         function animateCameraSpin() {
-            // Définir la position initiale de la caméra (un peu en arrière pour l'effet)
-            camera.alpha -= Math.PI * 0.75; // Commence avec un décalage de rotation
-            camera.beta = Math.PI / 2.5; // Hauteur de la caméra
-            camera.radius = 300; // Distance par rapport au centre
-
-            // Créer une animation pour la rotation alpha (horizontal) de la caméra
+            camera.alpha -= Math.PI * 0.75;
+            camera.beta = Math.PI / 2.5;
+            camera.radius = 300;
             BABYLON.Animation.CreateAndStartAnimation(
-                "cameraSpin", // Nom de l'animation
-                camera,       // Cible de l'animation
-                "alpha",      // Propriété à animer
-                60,           // Images par seconde
-                120,          // Nombre total d'images (2 secondes à 60 fps)
-                camera.alpha, // Valeur de départ (rotation décalée)
-                camera.alpha + Math.PI * 0.75, // Valeur d'arrivée (retour à la position normale)
-                BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT, // Une seule fois
-                new BABYLON.CubicEase() // Type d'accélération pour un mouvement fluide
+                "cameraSpin",
+                camera,
+                "alpha",
+                60,
+                120,
+                camera.alpha,
+                camera.alpha + Math.PI * 0.75,
+                BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT,
+                new BABYLON.CubicEase()
             );
-
-            // Optionnel : Animer légèrement le zoom si vous voulez un effet d'approche
             BABYLON.Animation.CreateAndStartAnimation(
                 "cameraZoom",
                 camera,
                 "radius",
                 60,
                 120,
-                camera.radius * 1.2, // Commence un peu plus loin
-                camera.radius,       // Revient à la distance normale
+                camera.radius * 1.2,
+                camera.radius,
                 BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT,
                 new BABYLON.CubicEase()
             );
-
-            // Rattache les contrôles de la caméra une fois l'animation terminée
             setTimeout(() => {
                 camera.attachControl(canvas, true);
                 camera.inputs.add(new BABYLON.ArcRotateCameraPointersInput());
                 camera.inputs.add(new BABYLON.ArcRotateCameraKeyboardInput());
-            }, 2000); // Doit correspondre à la durée de l'animation (120 images / 60 fps = 2 secondes)
+            }, 2000);
         }
     </script>
 </body>
