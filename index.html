@@ -284,11 +284,11 @@
 
         let panoLoaded = false;
         let lottieAnimationComplete = false;
-        let currentPage = 1; // 1 = Page d'accueil, 2 = Page 2
-
-        // Positions de caméra pour chaque "page"
-        const page1Position = new BABYLON.Vector3(0, 0, 0);
-        const page2Position = new BABYLON.Vector3(-1000, 0, 0); // Décalage de 1000 unités sur l'axe X
+        let currentPage = 1;
+        
+        // CORRECTION : Les positions des pages incluent le point focal de la caméra
+        const page1Data = { position: new BABYLON.Vector3(0, 0, 0), target: new BABYLON.Vector3(0, 0, 0) };
+        const page2Data = { position: new BABYLON.Vector3(-1000, 0, 0), target: new BABYLON.Vector3(-1000, 0, 0) };
 
         function supportsWebP(callback) {
             const img = new Image();
@@ -297,20 +297,19 @@
             img.src = "data:image/webp;base64,UklGRiIAAABXRUJQVlA4TCEAAAAvAAAAAA...";
         }
 
-        // --- NOUVEAU CODE : Crée les deux panoramas dans la même scène ---
         function createPhotoDomes() {
-            // Panorama 1 (Page d'accueil)
             supportsWebP((isSupported) => {
                 const pano1File = isSupported ? "test7.webp" : "backgroundstatiqueexportepourleweb4.png";
-                createDome("panorama1", pano1File, new BABYLON.Vector3(0, 0, 0));
+                createDome("panorama1", pano1File, page1Data.target);
             });
 
-            // Panorama 2 (Page 2)
+            // CORRECTION : S'assurer que le panorama de la page 2 existe
             const pano2File = "pano2.jpg"; // REMPLACEZ PAR VOTRE IMAGE
-            createDome("panorama2", pano2File, page2Position);
+            createDome("panorama2", pano2File, page2Data.target);
         }
 
         function createDome(name, file, position) {
+            // Le PhotoDome est toujours positionné au centre de la caméra
             const dome = new BABYLON.PhotoDome(name, file + "?v=" + Date.now(), { resolution: 32, size: 1000 }, scene);
             dome.imageMode = BABYLON.PhotoDome.MODE_MONOSCOPIC;
             dome.position = position;
@@ -321,6 +320,19 @@
                     checkAndStartPanoramaIntro();
                 }
             };
+            
+            // CORRECTION : Gestion des erreurs de chargement pour les images
+            if (dome.texture && dome.texture.onLoadErrorObservable) {
+                dome.texture.onLoadErrorObservable.add(() => {
+                    console.error(`Erreur de chargement du panorama : ${file}`);
+                    // Fallback si l'image ne charge pas
+                    if (name === "panorama1") {
+                        panoLoaded = true;
+                        checkAndStartPanoramaIntro();
+                    }
+                });
+            }
+
             const domeMat = dome.mesh.material;
             if (file.endsWith(".jpg") || file.endsWith(".jpeg")) {
                 domeMat.diffuseTexture.hasAlpha = false;
@@ -335,19 +347,7 @@
             }
         }
         
-        // Appelez la fonction qui crée les deux panoramas
         createPhotoDomes();
-
-        // --- NOUVEAU CODE : Ajout des objets 3D de la page 2 ---
-        // Pour l'exemple, nous allons ajouter un cube simple à la page 2
-        // Vous pouvez remplacer ce code par vos propres modèles GLB
-        // J'ai mis en commentaire pour ne pas polluer l'affichage.
-        /*
-        const page2Mesh = BABYLON.MeshBuilder.CreateBox("page2-box", {size: 100}, scene);
-        page2Mesh.position = page2Position.add(new BABYLON.Vector3(0, 0, 100));
-        page2Mesh.material = new BABYLON.StandardMaterial("page2-mat", scene);
-        page2Mesh.material.diffuseColor = BABYLON.Color3.Red();
-        */
 
         const circleMap = new Map();
         function createCircle(id, text) {
@@ -390,7 +390,6 @@
             return `https://www.youtube.com/embed/${videoId}?modestbranding=1&rel=0&playsinline=1&autoplay=1`;
         }
 
-        // Chargement des GLB de la page 1
         glbFiles.forEach((file, index) => {
             BABYLON.SceneLoader.ImportMesh("", "./", file, scene, function(meshes, particleSystems, skeletons, animationGroups) {
                 if (!meshes || meshes.length === 0) {
@@ -402,7 +401,9 @@
                     animationGroups.forEach(ag => ag.start(true));
                 }
                 mesh.scaling = new BABYLON.Vector3(50, 50, 50);
+                // Le parent doit être à la position de la page
                 const pivot = new BABYLON.TransformNode("pivot_" + index, scene);
+                pivot.position = page1Data.position; // Positionne le pivot sur la page 1
                 mesh.position.z = radius;
                 if (customAngles[index] !== undefined) {
                     pivot.rotation.y = customAngles[index];
@@ -492,18 +493,15 @@
                 });
             }
 
-            // --- NOUVEAU CODE : Gestion de l'animation de page ---
             if (linkButton) {
                 linkButton.addEventListener('click', () => {
                     if (currentPage === 1) {
-                        // Passer à la page 2
-                        animateCameraTo(page2Position, () => {
+                        animateCameraTo(page2Data, () => {
                             currentPage = 2;
                             linkButton.textContent = 'Page 1';
                         });
                     } else {
-                        // Revenir à la page 1
-                        animateCameraTo(page1Position, () => {
+                        animateCameraTo(page1Data, () => {
                             currentPage = 1;
                             linkButton.textContent = 'Page 2';
                         });
@@ -513,37 +511,49 @@
         });
 
         // Fonction pour animer le mouvement de la caméra entre les pages
-        function animateCameraTo(targetPosition, onComplete) {
+        function animateCameraTo(targetData, onComplete) {
             const startPosition = camera.position.clone();
-            const animation = new BABYLON.Animation(
-                "cameraMove",
-                "position",
-                60,
-                BABYLON.Animation.ANIMATIONTYPE_VECTOR3,
-                BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT
+            const startTarget = camera.target.clone();
+
+            const positionAnimation = new BABYLON.Animation(
+                "cameraPositionMove", "position", 60,
+                BABYLON.Animation.ANIMATIONTYPE_VECTOR3, BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT
             );
-            const keys = [{
-                frame: 0,
-                value: startPosition
-            }, {
-                frame: 120, // 2 secondes
-                value: targetPosition
-            }];
-            animation.setKeys(keys);
-            
+            const positionKeys = [{ frame: 0, value: startPosition }, { frame: 120, value: targetData.position }];
+            positionAnimation.setKeys(positionKeys);
+
+            const targetAnimation = new BABYLON.Animation(
+                "cameraTargetMove", "target", 60,
+                BABYLON.Animation.ANIMATIONTYPE_VECTOR3, BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT
+            );
+            const targetKeys = [{ frame: 0, value: startTarget }, { frame: 120, value: targetData.target }];
+            targetAnimation.setKeys(targetKeys);
+
             const easingFunction = new BABYLON.CubicEase();
             easingFunction.setEasingMode(BABYLON.EasingFunction.EASINGMODE_EASEINOUT);
-            animation.setEasingFunction(easingFunction);
+
+            positionAnimation.setEasingFunction(easingFunction);
+            targetAnimation.setEasingFunction(easingFunction);
+
+            camera.animations.push(positionAnimation, targetAnimation);
             
-            camera.animations.push(animation);
-            
-            scene.beginDirectAnimation(camera, [animation], 0, 120, false, 1, onComplete);
+            // Lancer les deux animations en même temps
+            scene.beginDirectAnimation(camera, [positionAnimation, targetAnimation], 0, 120, false, 1, onComplete);
         }
 
         function animateCameraSpin() {
             camera.alpha -= Math.PI * 0.75;
             camera.beta = Math.PI / 2.5;
             camera.radius = 300;
+            
+            // CORRECTION : S'assurer que les contrôles de la caméra sont bien attachés après l'animation
+            setTimeout(() => {
+                camera.attachControl(canvas, true);
+                camera.inputs.add(new BABYLON.ArcRotateCameraPointersInput());
+                camera.inputs.add(new BABYLON.ArcRotateCameraKeyboardInput());
+            }, 2000);
+            
+            // Animation de la rotation et du zoom
             BABYLON.Animation.CreateAndStartAnimation(
                 "cameraSpin", camera, "alpha", 60, 120,
                 camera.alpha, camera.alpha + Math.PI * 0.75,
@@ -554,11 +564,6 @@
                 camera.radius * 1.2, camera.radius,
                 BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT, new BABYLON.CubicEase()
             );
-            setTimeout(() => {
-                camera.attachControl(canvas, true);
-                camera.inputs.add(new BABYLON.ArcRotateCameraPointersInput());
-                camera.inputs.add(new BABYLON.ArcRotateCameraKeyboardInput());
-            }, 2000);
         }
     </script>
 </body>
