@@ -219,6 +219,27 @@
             font-size: 16px;
             z-index: 101;
         }
+
+        /* NOUVEAU STYLE POUR LE BOUTON SCROLL */
+        #scrollButton {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: #E5005B;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
     </style>
 </head>
 <body>
@@ -248,6 +269,10 @@
         <button id="closeButton">Fermer</button>
         <iframe id="videoPlayer" allowfullscreen allow="autoplay; encrypted-media"></iframe>
     </div>
+
+    <button id="scrollButton">
+        &#x21bb; </button>
+    
 
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
     <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
@@ -291,7 +316,7 @@
                 domeMat.useAlphaFromDiffuseTexture = false;
                 domeMat.transparencyMode = BABYLON.Material.MATERIAL_OPAQUE;
             } else {
-                domeMat.diffuseTexture.hasAlpha = true;
+                domeMat.diffu seTexture.hasAlpha = true;
                 domeMat.useAlphaFromDiffuseTexture = true;
                 domeMat.transparencyMode = BABYLON.Material.MATERIAL_ALPHABLEND;
                 domeMat.backFaceCulling = false;
@@ -300,8 +325,8 @@
         }
 
         // Variable pour suivre l'état de l'animation Lottie
-        let lottieAnimationComplete = false; 
-
+        let lottieAnimationComplete = false;
+        
         // Fonction pour vérifier si tout est prêt et démarrer l'intro du panorama
         function checkAndStartPanoramaIntro() {
             if (panoLoaded && lottieAnimationComplete) {
@@ -454,8 +479,8 @@
                 // mais le déclenchement de l'animation de caméra est déplacé.
                 setTimeout(() => {
                     lottieContainer.style.display = 'none';
-                }, 1000); 
-
+                }, 1000);
+                
                 // Immédiatement vérifier et démarrer l'animation si le panorama est prêt
                 checkAndStartPanoramaIntro();
             });
@@ -501,6 +526,26 @@
                 camera.inputs.add(new BABYLON.ArcRotateCameraKeyboardInput());
             }, 2000); // Doit correspondre à la durée de l'animation (120 images / 60 fps = 2 secondes)
         }
+
+        // NOUVEAU CODE : Ajout d'un écouteur d'événement pour le bouton de défilement
+        const scrollButton = document.getElementById('scrollButton');
+        scrollButton.addEventListener('click', () => {
+            // L'incrément de rotation en radians (30 degrés = 30 * Math.PI / 180)
+            const rotationIncrement = 30 * (Math.PI / 180);
+
+            // Créer une animation pour faire tourner la caméra de 30 degrés
+            BABYLON.Animation.CreateAndStartAnimation(
+                "scrollCam",
+                camera,
+                "alpha",
+                60, // frames per second
+                60, // 1 second total animation
+                camera.alpha,
+                camera.alpha + rotationIncrement,
+                BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT,
+                new BABYLON.CubicEase() // easing
+            );
+        });
     </script>
 </body>
 </html>
