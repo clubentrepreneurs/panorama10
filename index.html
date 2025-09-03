@@ -21,21 +21,17 @@
             touch-action: none;
             background-color: transparent !important;
         }
-
-        /* AJOUT : Le canvas est caché au début pour éviter un flash */
         #renderCanvas.hidden {
             visibility: hidden;
         }
-
-        /* === Styles pour l'animation Lottie d'introduction === */
         #lottie-container {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: white; /* ou la couleur de votre fond */
-            z-index: 9999; /* S'assure qu'il est au-dessus de tout */
+            background-color: white;
+            z-index: 9999;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -43,11 +39,8 @@
         }
         #lottie-container.fade-out {
             opacity: 0;
-            /* Empêche les interactions pendant le fade-out */
             pointer-events: none;
         }
-
-        /* === Texte stylisé avec effet bounce === */
         #customText {
             position: absolute;
             bottom: 5vh;
@@ -88,8 +81,6 @@
                 transform: translate(-50%, 0) scale(1);
             }
         }
-
-        /* === Styles pour le menu Hamburger === */
         #menu-container {
             position: fixed;
             top: 20px;
@@ -131,8 +122,6 @@
         #menu-overlay.open {
             transform: translateX(0);
         }
-
-        /* === Cercles animés === */
         .circleContainer {
             position: absolute;
             width: 40px;
@@ -175,8 +164,6 @@
             0% { transform: scale(0); opacity: 0.9; }
             100% { transform: scale(1.5); opacity: 0; }
         }
-
-        /* === Texte overlay des GLB === */
         .text-overlay {
             position: absolute;
             top: 100%;
@@ -192,8 +179,6 @@
             pointer-events: none;
             margin-top: 5px;
         }
-
-        /* === Vidéo responsive === */
         #videoContainer {
             position: absolute;
             top: 50%; left: 50%;
@@ -219,8 +204,6 @@
             font-size: 16px;
             z-index: 101;
         }
-        
-        /* Styles des nouveaux boutons */
         .actionButton {
             position: fixed;
             bottom: 20px;
@@ -244,30 +227,21 @@
         }
         #linkButton {
             right: 80px;
-            font-size: 16px; /* Plus petit pour le texte */
+            font-size: 16px;
         }
-
-        /* Règle pour masquer le bouton de défilement sur les petits écrans (smartphones) */
         @media (max-width: 768px) {
             #scrollButton {
                 display: none;
             }
         }
-
-        /* NOUVEAU STYLE POUR LA TRANSITION */
-        body.transition-out {
-            transition: opacity 0.5s ease-in-out;
-            opacity: 0;
-        }
     </style>
 </head>
 <body>
     <div id="lottie-container"></div>
-    <canvas id="renderCanvas" class="hidden"></canvas> <div id="customText">
+    <canvas id="renderCanvas" class="hidden"></canvas>
+    <div id="customText">
         <br>
-        
     </div>
-
     <div id="menu-container">
         <button id="hamburger-button">
             <span class="line"></span>
@@ -283,19 +257,17 @@
             <li><a href="https://www.youtube.com/watch?v=SWIDVGO3Gg0">Vidéo "Intranet étudiant"</a></li>
         </ul>
     </div>
-    
     <div id="videoContainer">
         <button id="closeButton">Fermer</button>
         <iframe id="videoPlayer" allowfullscreen allow="autoplay; encrypted-media"></iframe>
     </div>
-
     <button id="scrollButton" class="actionButton">
-        &#x21bb; </button>
-    
-    <button id="linkButton" class="actionButton">
-        Go
+        &#x21bb;
     </button>
-
+    <button id="linkButton" class="actionButton">
+        Page 2
+    </button>
+    
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
     <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
     <script>
@@ -306,13 +278,18 @@
 
         const camera = new BABYLON.ArcRotateCamera("cam", Math.PI/2, Math.PI/2.5, 300, new BABYLON.Vector3(0,0,0), scene);
         camera.attachControl(canvas, true);
-        camera.inputs.clear(); // Désactiver temporairement les contrôles pour l'animation
+        camera.inputs.clear();
         
         new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0,1,0), scene);
 
-        let panoLoaded = false; // Variable pour suivre le chargement du panorama
+        let panoLoaded = false;
+        let lottieAnimationComplete = false;
+        let currentPage = 1; // 1 = Page d'accueil, 2 = Page 2
 
-        // === Support WebP + fallback + gestion PNG/JPG ===
+        // Positions de caméra pour chaque "page"
+        const page1Position = new BABYLON.Vector3(0, 0, 0);
+        const page2Position = new BABYLON.Vector3(-1000, 0, 0); // Décalage de 1000 unités sur l'axe X
+
         function supportsWebP(callback) {
             const img = new Image();
             img.onload = () => callback(img.width > 0 && img.height > 0);
@@ -320,20 +297,32 @@
             img.src = "data:image/webp;base64,UklGRiIAAABXRUJQVlA4TCEAAAAvAAAAAA...";
         }
 
-        function createPhotoDome(panoFile) {
-            const dome = new BABYLON.PhotoDome("panorama", panoFile + "?v=" + Date.now(), { resolution: 32, size: 1000 }, scene);
+        // --- NOUVEAU CODE : Crée les deux panoramas dans la même scène ---
+        function createPhotoDomes() {
+            // Panorama 1 (Page d'accueil)
+            supportsWebP((isSupported) => {
+                const pano1File = isSupported ? "test7.webp" : "backgroundstatiqueexportepourleweb4.png";
+                createDome("panorama1", pano1File, new BABYLON.Vector3(0, 0, 0));
+            });
+
+            // Panorama 2 (Page 2)
+            const pano2File = "pano2.jpg"; // REMPLACEZ PAR VOTRE IMAGE
+            createDome("panorama2", pano2File, page2Position);
+        }
+
+        function createDome(name, file, position) {
+            const dome = new BABYLON.PhotoDome(name, file + "?v=" + Date.now(), { resolution: 32, size: 1000 }, scene);
             dome.imageMode = BABYLON.PhotoDome.MODE_MONOSCOPIC;
+            dome.position = position;
 
-            // Une fois que l'image du dôme est prête, marquer le panorama comme chargé
             dome.onReady = () => {
-                panoLoaded = true;
-                // Si le Lottie est déjà terminé ou en train de se terminer, on peut démarrer la suite.
-                checkAndStartPanoramaIntro();
+                if (name === "panorama1") {
+                    panoLoaded = true;
+                    checkAndStartPanoramaIntro();
+                }
             };
-
             const domeMat = dome.mesh.material;
-
-            if (panoFile.endsWith(".jpg") || panoFile.endsWith(".jpeg")) {
+            if (file.endsWith(".jpg") || file.endsWith(".jpeg")) {
                 domeMat.diffuseTexture.hasAlpha = false;
                 domeMat.useAlphaFromDiffuseTexture = false;
                 domeMat.transparencyMode = BABYLON.Material.MATERIAL_OPAQUE;
@@ -345,25 +334,20 @@
                 domeMat.needDepthPrePass = true;
             }
         }
-
-        // Variable pour suivre l'état de l'animation Lottie
-        let lottieAnimationComplete = false;
         
-        // Fonction pour vérifier si tout est prêt et démarrer l'intro du panorama
-        function checkAndStartPanoramaIntro() {
-            if (panoLoaded && lottieAnimationComplete) {
-                // Rendre le canvas visible juste avant l'animation de la caméra
-                canvas.classList.remove('hidden');
-                animateCameraSpin();
-            }
-        }
+        // Appelez la fonction qui crée les deux panoramas
+        createPhotoDomes();
 
-        // Placez la logique de chargement du panorama au début
-        // pour qu'il commence à charger dès que possible
-        supportsWebP((isSupported) => {
-            const panoFile = isSupported ? "test7.webp" : "backgroundstatiqueexportepourleweb4.png";
-            createPhotoDome(panoFile);
-        });
+        // --- NOUVEAU CODE : Ajout des objets 3D de la page 2 ---
+        // Pour l'exemple, nous allons ajouter un cube simple à la page 2
+        // Vous pouvez remplacer ce code par vos propres modèles GLB
+        // J'ai mis en commentaire pour ne pas polluer l'affichage.
+        /*
+        const page2Mesh = BABYLON.MeshBuilder.CreateBox("page2-box", {size: 100}, scene);
+        page2Mesh.position = page2Position.add(new BABYLON.Vector3(0, 0, 100));
+        page2Mesh.material = new BABYLON.StandardMaterial("page2-mat", scene);
+        page2Mesh.material.diffuseColor = BABYLON.Color3.Red();
+        */
 
         const circleMap = new Map();
         function createCircle(id, text) {
@@ -406,6 +390,7 @@
             return `https://www.youtube.com/embed/${videoId}?modestbranding=1&rel=0&playsinline=1&autoplay=1`;
         }
 
+        // Chargement des GLB de la page 1
         glbFiles.forEach((file, index) => {
             BABYLON.SceneLoader.ImportMesh("", "./", file, scene, function(meshes, particleSystems, skeletons, animationGroups) {
                 if (!meshes || meshes.length === 0) {
@@ -417,17 +402,14 @@
                     animationGroups.forEach(ag => ag.start(true));
                 }
                 mesh.scaling = new BABYLON.Vector3(50, 50, 50);
-
                 const pivot = new BABYLON.TransformNode("pivot_" + index, scene);
                 mesh.position.z = radius;
                 if (customAngles[index] !== undefined) {
                     pivot.rotation.y = customAngles[index];
                 }
                 mesh.parent = pivot;
-
                 const circle = createCircle(index + 1, circleLabels[index]);
                 circleMap.set(mesh, circle);
-
                 circle.addEventListener('click', () => {
                     const embedUrl = getEmbedUrl(videoUrls[index]);
                     videoPlayer.src = embedUrl;
@@ -478,93 +460,99 @@
             customText.classList.toggle("zoomed");
         });
 
-        // Le code Lottie est le premier à s'exécuter
         document.addEventListener("DOMContentLoaded", () => {
             const lottieContainer = document.getElementById('lottie-container');
+            const linkButton = document.getElementById('linkButton');
+            const scrollButton = document.getElementById('scrollButton');
 
             const anim = lottie.loadAnimation({
                 container: lottieContainer,
                 renderer: 'svg',
                 loop: false,
                 autoplay: true,
-                path: 'intro.json', // REMPLACEZ 'intro.json' par le nom de votre fichier JSON
-                rendererSettings: {
-                    preserveAspectRatio: 'xMidYMid slice'
-                }
+                path: 'intro.json',
+                rendererSettings: { preserveAspectRatio: 'xMidYMid slice' }
             });
 
             anim.addEventListener('complete', () => {
-                lottieAnimationComplete = true; // Marquer le Lottie comme terminé
-                lottieContainer.classList.add('fade-out'); // Déclencher le fondu CSS
-                
-                // Le `setTimeout` reste pour masquer complètement le conteneur Lottie
-                setTimeout(() => {
-                    lottieContainer.style.display = 'none';
-                }, 1000);
-                
-                // Immédiatement vérifier et démarrer l'animation si le panorama est prêt
+                lottieAnimationComplete = true;
+                lottieContainer.classList.add('fade-out');
+                setTimeout(() => { lottieContainer.style.display = 'none'; }, 1000);
                 checkAndStartPanoramaIntro();
             });
 
-            // Ajout de l'écouteur d'événement pour le bouton de défilement
-            const scrollButton = document.getElementById('scrollButton');
-            if (scrollButton) { // S'assurer que le bouton existe
+            if (scrollButton) {
                 scrollButton.addEventListener('click', () => {
                     const rotationIncrement = 30 * (Math.PI / 180);
                     BABYLON.Animation.CreateAndStartAnimation(
-                        "scrollCam",
-                        camera,
-                        "alpha",
-                        60,
-                        60,
-                        camera.alpha,
-                        camera.alpha + rotationIncrement,
-                        BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT,
-                        new BABYLON.CubicEase()
+                        "scrollCam", camera, "alpha", 60, 60,
+                        camera.alpha, camera.alpha + rotationIncrement,
+                        BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT, new BABYLON.CubicEase()
                     );
                 });
             }
 
-            // NOUVEAU CODE : Gestion de la transition de page
-            const linkButton = document.getElementById('linkButton');
+            // --- NOUVEAU CODE : Gestion de l'animation de page ---
             if (linkButton) {
-                linkButton.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    // Ajoute la classe de transition au corps de la page
-                    document.body.classList.add('transition-out');
-                    // Attend la fin de l'animation de fondu (0.5s) avant de changer de page
-                    setTimeout(() => {
-                        window.location.href = 'page2.html';
-                    }, 500);
+                linkButton.addEventListener('click', () => {
+                    if (currentPage === 1) {
+                        // Passer à la page 2
+                        animateCameraTo(page2Position, () => {
+                            currentPage = 2;
+                            linkButton.textContent = 'Page 1';
+                        });
+                    } else {
+                        // Revenir à la page 1
+                        animateCameraTo(page1Position, () => {
+                            currentPage = 1;
+                            linkButton.textContent = 'Page 2';
+                        });
+                    }
                 });
             }
         });
+
+        // Fonction pour animer le mouvement de la caméra entre les pages
+        function animateCameraTo(targetPosition, onComplete) {
+            const startPosition = camera.position.clone();
+            const animation = new BABYLON.Animation(
+                "cameraMove",
+                "position",
+                60,
+                BABYLON.Animation.ANIMATIONTYPE_VECTOR3,
+                BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT
+            );
+            const keys = [{
+                frame: 0,
+                value: startPosition
+            }, {
+                frame: 120, // 2 secondes
+                value: targetPosition
+            }];
+            animation.setKeys(keys);
+            
+            const easingFunction = new BABYLON.CubicEase();
+            easingFunction.setEasingMode(BABYLON.EasingFunction.EASINGMODE_EASEINOUT);
+            animation.setEasingFunction(easingFunction);
+            
+            camera.animations.push(animation);
+            
+            scene.beginDirectAnimation(camera, [animation], 0, 120, false, 1, onComplete);
+        }
 
         function animateCameraSpin() {
             camera.alpha -= Math.PI * 0.75;
             camera.beta = Math.PI / 2.5;
             camera.radius = 300;
             BABYLON.Animation.CreateAndStartAnimation(
-                "cameraSpin",
-                camera,
-                "alpha",
-                60,
-                120,
-                camera.alpha,
-                camera.alpha + Math.PI * 0.75,
-                BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT,
-                new BABYLON.CubicEase()
+                "cameraSpin", camera, "alpha", 60, 120,
+                camera.alpha, camera.alpha + Math.PI * 0.75,
+                BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT, new BABYLON.CubicEase()
             );
             BABYLON.Animation.CreateAndStartAnimation(
-                "cameraZoom",
-                camera,
-                "radius",
-                60,
-                120,
-                camera.radius * 1.2,
-                camera.radius,
-                BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT,
-                new BABYLON.CubicEase()
+                "cameraZoom", camera, "radius", 60, 120,
+                camera.radius * 1.2, camera.radius,
+                BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT, new BABYLON.CubicEase()
             );
             setTimeout(() => {
                 camera.attachControl(canvas, true);
