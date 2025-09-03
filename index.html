@@ -238,8 +238,15 @@
             align-items: center;
             z-index: 1000;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
         }
 
+        /* Règle pour masquer le bouton sur les petits écrans (smartphones) */
+        @media (max-width: 768px) {
+            #scrollButton {
+                display: none;
+            }
+        }
     </style>
 </head>
 <body>
@@ -316,7 +323,8 @@
                 domeMat.useAlphaFromDiffuseTexture = false;
                 domeMat.transparencyMode = BABYLON.Material.MATERIAL_OPAQUE;
             } else {
-                domeMat.diffu seTexture.hasAlpha = true;
+                // FIX: Correction de la faute de frappe
+                domeMat.diffuseTexture.hasAlpha = true;
                 domeMat.useAlphaFromDiffuseTexture = true;
                 domeMat.transparencyMode = BABYLON.Material.MATERIAL_ALPHABLEND;
                 domeMat.backFaceCulling = false;
@@ -476,13 +484,32 @@
                 lottieContainer.classList.add('fade-out'); // Déclencher le fondu CSS
                 
                 // Le `setTimeout` reste pour masquer complètement le conteneur Lottie
-                // mais le déclenchement de l'animation de caméra est déplacé.
                 setTimeout(() => {
                     lottieContainer.style.display = 'none';
                 }, 1000);
                 
                 // Immédiatement vérifier et démarrer l'animation si le panorama est prêt
                 checkAndStartPanoramaIntro();
+            });
+
+            // NOUVEAU CODE : Ajout d'un écouteur d'événement pour le bouton de défilement
+            const scrollButton = document.getElementById('scrollButton');
+            scrollButton.addEventListener('click', () => {
+                // L'incrément de rotation en radians (30 degrés = 30 * Math.PI / 180)
+                const rotationIncrement = 30 * (Math.PI / 180);
+
+                // Créer une animation pour faire tourner la caméra de 30 degrés
+                BABYLON.Animation.CreateAndStartAnimation(
+                    "scrollCam",
+                    camera,
+                    "alpha",
+                    60, // frames per second
+                    60, // 1 second total animation
+                    camera.alpha,
+                    camera.alpha + rotationIncrement,
+                    BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT,
+                    new BABYLON.CubicEase() // easing
+                );
             });
         });
 
@@ -526,26 +553,6 @@
                 camera.inputs.add(new BABYLON.ArcRotateCameraKeyboardInput());
             }, 2000); // Doit correspondre à la durée de l'animation (120 images / 60 fps = 2 secondes)
         }
-
-        // NOUVEAU CODE : Ajout d'un écouteur d'événement pour le bouton de défilement
-        const scrollButton = document.getElementById('scrollButton');
-        scrollButton.addEventListener('click', () => {
-            // L'incrément de rotation en radians (30 degrés = 30 * Math.PI / 180)
-            const rotationIncrement = 30 * (Math.PI / 180);
-
-            // Créer une animation pour faire tourner la caméra de 30 degrés
-            BABYLON.Animation.CreateAndStartAnimation(
-                "scrollCam",
-                camera,
-                "alpha",
-                60, // frames per second
-                60, // 1 second total animation
-                camera.alpha,
-                camera.alpha + rotationIncrement,
-                BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT,
-                new BABYLON.CubicEase() // easing
-            );
-        });
     </script>
 </body>
 </html>
