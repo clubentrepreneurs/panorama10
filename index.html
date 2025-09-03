@@ -2,15 +2,15 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <title>GLB + cercles + panorama + menu</title>
+  <title>One Page Babylon + Menu</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
   <link href="https://fonts.cdnfonts.com/css/apex-new" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.10.2/lottie.min.js"></script>
   <style>
     html, body {
       margin: 0;
-      overflow: hidden;
       height: 100%;
+      overflow: hidden;
       background: none;
     }
 
@@ -22,10 +22,12 @@
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.7s ease-in-out;
+      z-index: 0;
     }
     .page.active {
       opacity: 1;
       pointer-events: auto;
+      z-index: 1; /* Toujours au-dessus quand actif */
     }
 
     /* === Canvas Babylon === */
@@ -139,7 +141,7 @@
     camera.inputs.clear();
     new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0,1,0), scene);
 
-    // Lottie intro
+    // === Gestion Lottie intro ===
     document.addEventListener("DOMContentLoaded", () => {
       const lottieContainer = document.getElementById('lottie-container');
       const anim = lottie.loadAnimation({
@@ -147,7 +149,7 @@
         renderer: 'svg',
         loop: false,
         autoplay: true,
-        path: 'intro.json'
+        path: 'intro.json' // ton fichier d'anim JSON
       });
 
       anim.addEventListener('complete', () => {
@@ -173,13 +175,13 @@
       });
     });
 
-    // Gestion des pages
+    // === Gestion des pages ===
     function showPage(id) {
       document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
       document.getElementById(id).classList.add("active");
     }
 
-    // Babylon render loop
+    // === Render Babylon ===
     engine.runRenderLoop(() => scene.render());
     window.addEventListener("resize", () => engine.resize());
   </script>
