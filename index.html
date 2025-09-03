@@ -276,17 +276,16 @@
         const scene = new BABYLON.Scene(engine);
         scene.clearColor = new BABYLON.Color4(0, 0, 0, 0);
 
-        const camera = new BABYLON.ArcRotateCamera("cam", Math.PI/2, Math.PI/2.5, 300, new BABYLON.Vector3(0,0,0), scene);
+        // NOUVEAU : La caméra est initialisée dans sa position finale
+        const camera = new BABYLON.ArcRotateCamera("cam", -Math.PI / 2, Math.PI / 2.5, 300, new BABYLON.Vector3(0, 0, 0), scene);
         camera.attachControl(canvas, true);
-        camera.inputs.clear();
-        
-        new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0,1,0), scene);
+        camera.inputs.add(new BABYLON.ArcRotateCameraPointersInput());
+        camera.inputs.add(new BABYLON.ArcRotateCameraKeyboardInput());
 
-        let panoLoaded = false;
-        let lottieAnimationComplete = false;
+        new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
+
         let currentPage = 1;
         
-        // CORRECTION : Les positions des pages incluent le point focal de la caméra
         const page1Data = { position: new BABYLON.Vector3(0, 0, 0), target: new BABYLON.Vector3(0, 0, 0) };
         const page2Data = { position: new BABYLON.Vector3(-1000, 0, 0), target: new BABYLON.Vector3(-1000, 0, 0) };
 
@@ -297,42 +296,31 @@
             img.src = "data:image/webp;base64,UklGRiIAAABXRUJQVlA4TCEAAAAvAAAAAA...";
         }
 
+        // === Initialisation de tous les éléments dès le début ===
         function createPhotoDomes() {
             supportsWebP((isSupported) => {
                 const pano1File = isSupported ? "test7.webp" : "backgroundstatiqueexportepourleweb4.png";
                 createDome("panorama1", pano1File, page1Data.target);
             });
-
-            // CORRECTION : S'assurer que le panorama de la page 2 existe
-            const pano2File = "pano2.jpg"; // REMPLACEZ PAR VOTRE IMAGE
+            const pano2File = "pano2.jpg"; 
             createDome("panorama2", pano2File, page2Data.target);
         }
 
         function createDome(name, file, position) {
-            // Le PhotoDome est toujours positionné au centre de la caméra
             const dome = new BABYLON.PhotoDome(name, file + "?v=" + Date.now(), { resolution: 32, size: 1000 }, scene);
             dome.imageMode = BABYLON.PhotoDome.MODE_MONOSCOPIC;
             dome.position = position;
 
+            // NOUVEAU : Log pour confirmer le chargement
             dome.onReady = () => {
-                if (name === "panorama1") {
-                    panoLoaded = true;
-                    checkAndStartPanoramaIntro();
-                }
+                console.log(`Panorama ${name} chargé.`);
             };
             
-            // CORRECTION : Gestion des erreurs de chargement pour les images
             if (dome.texture && dome.texture.onLoadErrorObservable) {
                 dome.texture.onLoadErrorObservable.add(() => {
                     console.error(`Erreur de chargement du panorama : ${file}`);
-                    // Fallback si l'image ne charge pas
-                    if (name === "panorama1") {
-                        panoLoaded = true;
-                        checkAndStartPanoramaIntro();
-                    }
                 });
             }
-
             const domeMat = dome.mesh.material;
             if (file.endsWith(".jpg") || file.endsWith(".jpeg")) {
                 domeMat.diffuseTexture.hasAlpha = false;
@@ -358,28 +346,15 @@
             document.body.appendChild(container);
             return container;
         }
-
         const glbFiles = ["agenda2.glb", "socleetoiletoque2.glb", "coffre2.glb", "livres2.glb"];
         const videoUrls = [
-            "https://www.youtube.com/watch?v=lUU1G-6klpI",
-            "https://www.youtube.com/watch?v=SWIDVGO3Gg0",
-            "https://www.youtube.com/watch?v=Jgcb7hjdgaU",
-            "https://www.youtube.com/watch?v=T6CI_hIbJIA"
+            "https://www.youtube.com/watch?v=lUU1G-6klpI", "https://www.youtube.com/watch?v=SWIDVGO3Gg0",
+            "https://www.youtube.com/watch?v=Jgcb7hjdgaU", "https://www.youtube.com/watch?v=T6CI_hIbJIA"
         ];
-        const customAngles = [
-            0.5 * (Math.PI / 180),
-            302 * (Math.PI / 180),
-            112.5 * (Math.PI / 180),
-            214 * (Math.PI / 180)
-        ];
+        const customAngles = [0.5 * (Math.PI / 180), 302 * (Math.PI / 180), 112.5 * (Math.PI / 180), 214 * (Math.PI / 180)];
         const radius = 400;
 
-        const circleLabels = [
-            "Bienvenue",
-            "Compte Sésame",
-            "Intranet étudiant",
-            "Moodle"
-        ];
+        const circleLabels = ["Bienvenue", "Compte Sésame", "Intranet étudiant", "Moodle"];
 
         const videoContainer = document.getElementById("videoContainer");
         const videoPlayer = document.getElementById("videoPlayer");
@@ -401,9 +376,8 @@
                     animationGroups.forEach(ag => ag.start(true));
                 }
                 mesh.scaling = new BABYLON.Vector3(50, 50, 50);
-                // Le parent doit être à la position de la page
                 const pivot = new BABYLON.TransformNode("pivot_" + index, scene);
-                pivot.position = page1Data.position; // Positionne le pivot sur la page 1
+                pivot.position = page1Data.position;
                 mesh.position.z = radius;
                 if (customAngles[index] !== undefined) {
                     pivot.rotation.y = customAngles[index];
@@ -466,20 +440,17 @@
             const linkButton = document.getElementById('linkButton');
             const scrollButton = document.getElementById('scrollButton');
 
+            // NOUVEAU : La caméra est immédiatement prête, pas besoin de l'animation de démarrage
+            canvas.classList.remove('hidden');
+
             const anim = lottie.loadAnimation({
-                container: lottieContainer,
-                renderer: 'svg',
-                loop: false,
-                autoplay: true,
+                container: lottieContainer, renderer: 'svg', loop: false, autoplay: true,
                 path: 'intro.json',
                 rendererSettings: { preserveAspectRatio: 'xMidYMid slice' }
             });
-
             anim.addEventListener('complete', () => {
-                lottieAnimationComplete = true;
                 lottieContainer.classList.add('fade-out');
                 setTimeout(() => { lottieContainer.style.display = 'none'; }, 1000);
-                checkAndStartPanoramaIntro();
             });
 
             if (scrollButton) {
@@ -510,7 +481,6 @@
             }
         });
 
-        // Fonction pour animer le mouvement de la caméra entre les pages
         function animateCameraTo(targetData, onComplete) {
             const startPosition = camera.position.clone();
             const startTarget = camera.target.clone();
@@ -537,33 +507,7 @@
 
             camera.animations.push(positionAnimation, targetAnimation);
             
-            // Lancer les deux animations en même temps
             scene.beginDirectAnimation(camera, [positionAnimation, targetAnimation], 0, 120, false, 1, onComplete);
-        }
-
-        function animateCameraSpin() {
-            camera.alpha -= Math.PI * 0.75;
-            camera.beta = Math.PI / 2.5;
-            camera.radius = 300;
-            
-            // CORRECTION : S'assurer que les contrôles de la caméra sont bien attachés après l'animation
-            setTimeout(() => {
-                camera.attachControl(canvas, true);
-                camera.inputs.add(new BABYLON.ArcRotateCameraPointersInput());
-                camera.inputs.add(new BABYLON.ArcRotateCameraKeyboardInput());
-            }, 2000);
-            
-            // Animation de la rotation et du zoom
-            BABYLON.Animation.CreateAndStartAnimation(
-                "cameraSpin", camera, "alpha", 60, 120,
-                camera.alpha, camera.alpha + Math.PI * 0.75,
-                BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT, new BABYLON.CubicEase()
-            );
-            BABYLON.Animation.CreateAndStartAnimation(
-                "cameraZoom", camera, "radius", 60, 120,
-                camera.radius * 1.2, camera.radius,
-                BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT, new BABYLON.CubicEase()
-            );
         }
     </script>
 </body>
