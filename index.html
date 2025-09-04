@@ -142,12 +142,12 @@
             z-index: 1000;
             transform: translateX(-100%);
             transition: transform 0.3s ease-in-out;
-            padding: 60px 20px 20px;
+            padding: 100px 20px 20px; /* CHANGEMENT : Le padding-top est augmenté pour descendre le contenu */
             box-shadow: 2px 0 5px rgba(0,0,0,0.5);
             font-family: 'Apex New', sans-serif;
             box-sizing: border-box;
-            display: flex; /* NOUVEAU */
-            flex-direction: column; /* NOUVEAU */
+            display: flex;
+            flex-direction: column;
         }
         #menu-overlay.open {
             transform: translateX(0);
@@ -157,15 +157,15 @@
         #menu-overlay h2 {
             font-size: 20px;
             font-weight: bold;
-            color: #E5005B;
-            border-bottom: 2px solid #E5005B;
+            color: #000; /* CHANGEMENT : Couleur du titre en noir */
+            border-bottom: 2px solid #00AFD7; /* CHANGEMENT : Couleur de la bordure en bleu */
             padding-bottom: 10px;
             margin-bottom: 20px;
             text-align: center;
         }
         #menu-overlay ul {
-            list-style: none;
-            padding: 0;
+            list-style: disc; /* CHANGEMENT : Ajout des puces de liste */
+            padding: 0 0 0 20px; /* CHANGEMENT : Ajout d'un padding pour les puces */
             margin: 0;
         }
         #menu-overlay ul li {
