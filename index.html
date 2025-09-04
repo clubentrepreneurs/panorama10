@@ -21,21 +21,17 @@
             touch-action: none;
             background-color: transparent !important;
         }
-
-        /* AJOUT : Le canvas est caché au début pour éviter un flash */
         #renderCanvas.hidden {
             visibility: hidden;
         }
-
-        /* === Styles pour l'animation Lottie d'introduction === */
         #lottie-container {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: white; /* ou la couleur de votre fond */
-            z-index: 9999; /* S'assure qu'il est au-dessus de tout */
+            background-color: white;
+            z-index: 9999;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -43,11 +39,8 @@
         }
         #lottie-container.fade-out {
             opacity: 0;
-            /* Empêche les interactions pendant le fade-out */
             pointer-events: none;
         }
-
-        /* === Texte stylisé avec effet bounce === */
         #customText {
             position: absolute;
             bottom: 5vh;
@@ -108,11 +101,23 @@
             padding: 0;
         }
         #hamburger-button .line {
-            width: 180%;
+            width: 100%; /* CHANGEMENT : pour faciliter la rotation */
             height: 5px;
             background-color: #E5005B;
             transition: all 0.3s ease-in-out;
         }
+        
+        /* === NOUVEAU: Styles pour la transformation en croix === */
+        #hamburger-button.open .line:nth-child(1) {
+            transform: translateY(10px) rotate(45deg); /* Déplacement et rotation de la ligne du haut */
+        }
+        #hamburger-button.open .line:nth-child(2) {
+            opacity: 0; /* Disparition de la ligne du milieu */
+        }
+        #hamburger-button.open .line:nth-child(3) {
+            transform: translateY(-10px) rotate(-45deg); /* Déplacement et rotation de la ligne du bas */
+        }
+
         #menu-overlay {
             position: fixed;
             top: 0;
@@ -244,17 +249,13 @@
         }
         #linkButton {
             right: 80px;
-            font-size: 16px; /* Plus petit pour le texte */
+            font-size: 16px;
         }
-
-        /* Règle pour masquer le bouton de défilement sur les petits écrans (smartphones) */
         @media (max-width: 768px) {
             #scrollButton {
                 display: none;
             }
         }
-
-        /* NOUVEAU STYLE POUR LA TRANSITION */
         body.transition-out {
             transition: opacity 0.5s ease-in-out;
             opacity: 0;
@@ -263,11 +264,10 @@
 </head>
 <body>
     <div id="lottie-container"></div>
-    <canvas id="renderCanvas" class="hidden"></canvas> <div id="customText">
+    <canvas id="renderCanvas" class="hidden"></canvas>
+    <div id="customText">
         <br>
-        
     </div>
-
     <div id="menu-container">
         <button id="hamburger-button">
             <span class="line"></span>
@@ -283,19 +283,15 @@
             <li><a href="https://www.youtube.com/watch?v=SWIDVGO3Gg0">Vidéo "Intranet étudiant"</a></li>
         </ul>
     </div>
-    
     <div id="videoContainer">
         <button id="closeButton">Fermer</button>
         <iframe id="videoPlayer" allowfullscreen allow="autoplay; encrypted-media"></iframe>
     </div>
-
     <button id="scrollButton" class="actionButton">
         &#x21bb; </button>
-    
     <button id="linkButton" class="actionButton">
         Go
     </button>
-
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
     <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
     <script>
@@ -303,36 +299,25 @@
         const engine = new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true, alpha: true });
         const scene = new BABYLON.Scene(engine);
         scene.clearColor = new BABYLON.Color4(0, 0, 0, 0);
-
         const camera = new BABYLON.ArcRotateCamera("cam", Math.PI/2, Math.PI/2.5, 300, new BABYLON.Vector3(0,0,0), scene);
         camera.attachControl(canvas, true);
-        camera.inputs.clear(); // Désactiver temporairement les contrôles pour l'animation
-        
+        camera.inputs.clear();
         new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0,1,0), scene);
-
-        let panoLoaded = false; // Variable pour suivre le chargement du panorama
-
-        // === Support WebP + fallback + gestion PNG/JPG ===
+        let panoLoaded = false;
         function supportsWebP(callback) {
             const img = new Image();
             img.onload = () => callback(img.width > 0 && img.height > 0);
             img.onerror = () => callback(false);
             img.src = "data:image/webp;base64,UklGRiIAAABXRUJQVlA4TCEAAAAvAAAAAA...";
         }
-
         function createPhotoDome(panoFile) {
             const dome = new BABYLON.PhotoDome("panorama", panoFile + "?v=" + Date.now(), { resolution: 32, size: 1000 }, scene);
             dome.imageMode = BABYLON.PhotoDome.MODE_MONOSCOPIC;
-
-            // Une fois que l'image du dôme est prête, marquer le panorama comme chargé
             dome.onReady = () => {
                 panoLoaded = true;
-                // Si le Lottie est déjà terminé ou en train de se terminer, on peut démarrer la suite.
                 checkAndStartPanoramaIntro();
             };
-
             const domeMat = dome.mesh.material;
-
             if (panoFile.endsWith(".jpg") || panoFile.endsWith(".jpeg")) {
                 domeMat.diffuseTexture.hasAlpha = false;
                 domeMat.useAlphaFromDiffuseTexture = false;
@@ -345,26 +330,17 @@
                 domeMat.needDepthPrePass = true;
             }
         }
-
-        // Variable pour suivre l'état de l'animation Lottie
         let lottieAnimationComplete = false;
-        
-        // Fonction pour vérifier si tout est prêt et démarrer l'intro du panorama
         function checkAndStartPanoramaIntro() {
             if (panoLoaded && lottieAnimationComplete) {
-                // Rendre le canvas visible juste avant l'animation de la caméra
                 canvas.classList.remove('hidden');
                 animateCameraSpin();
             }
         }
-
-        // Placez la logique de chargement du panorama au début
-        // pour qu'il commence à charger dès que possible
         supportsWebP((isSupported) => {
             const panoFile = isSupported ? "test7.webp" : "backgroundstatiqueexportepourleweb4.png";
             createPhotoDome(panoFile);
         });
-
         const circleMap = new Map();
         function createCircle(id, text) {
             const container = document.createElement("div");
@@ -374,7 +350,6 @@
             document.body.appendChild(container);
             return container;
         }
-
         const glbFiles = ["agenda2.glb", "socleetoiletoque2.glb", "coffre2.glb", "livres2.glb"];
         const videoUrls = [
             "https://www.youtube.com/watch?v=lUU1G-6klpI",
@@ -389,23 +364,19 @@
             214 * (Math.PI / 180)
         ];
         const radius = 400;
-
         const circleLabels = [
             "Bienvenue",
             "Compte Sésame",
             "Intranet étudiant",
             "Moodle"
         ];
-
         const videoContainer = document.getElementById("videoContainer");
         const videoPlayer = document.getElementById("videoPlayer");
         const closeButton = document.getElementById("closeButton");
-
         function getEmbedUrl(url) {
             const videoId = url.split('v=')[1];
             return `https://www.youtube.com/embed/${videoId}?modestbranding=1&rel=0&playsinline=1&autoplay=1`;
         }
-
         glbFiles.forEach((file, index) => {
             BABYLON.SceneLoader.ImportMesh("", "./", file, scene, function(meshes, particleSystems, skeletons, animationGroups) {
                 if (!meshes || meshes.length === 0) {
@@ -417,17 +388,14 @@
                     animationGroups.forEach(ag => ag.start(true));
                 }
                 mesh.scaling = new BABYLON.Vector3(50, 50, 50);
-
                 const pivot = new BABYLON.TransformNode("pivot_" + index, scene);
                 mesh.position.z = radius;
                 if (customAngles[index] !== undefined) {
                     pivot.rotation.y = customAngles[index];
                 }
                 mesh.parent = pivot;
-
                 const circle = createCircle(index + 1, circleLabels[index]);
                 circleMap.set(mesh, circle);
-
                 circle.addEventListener('click', () => {
                     const embedUrl = getEmbedUrl(videoUrls[index]);
                     videoPlayer.src = embedUrl;
@@ -436,13 +404,11 @@
                 });
             });
         });
-
         closeButton.addEventListener('click', () => {
             videoPlayer.src = "";
             videoContainer.style.display = "none";
             camera.attachControl(canvas, true);
         });
-
         engine.runRenderLoop(() => {
             scene.render();
             circleMap.forEach((circle, mesh) => {
@@ -464,12 +430,13 @@
                 }
             });
         });
-
         window.addEventListener("resize", () => engine.resize());
-
+        
+        // NOUVEAU CODE : Événement du bouton et basculement de classe
         const hamburgerButton = document.getElementById('hamburger-button');
         const menuOverlay = document.getElementById('menu-overlay');
         hamburgerButton.addEventListener('click', () => {
+            hamburgerButton.classList.toggle('open');
             menuOverlay.classList.toggle('open');
         });
 
@@ -477,38 +444,28 @@
         customText.addEventListener("click", () => {
             customText.classList.toggle("zoomed");
         });
-
-        // Le code Lottie est le premier à s'exécuter
         document.addEventListener("DOMContentLoaded", () => {
             const lottieContainer = document.getElementById('lottie-container');
-
             const anim = lottie.loadAnimation({
                 container: lottieContainer,
                 renderer: 'svg',
                 loop: false,
                 autoplay: true,
-                path: 'intro.json', // REMPLACEZ 'intro.json' par le nom de votre fichier JSON
+                path: 'intro.json',
                 rendererSettings: {
                     preserveAspectRatio: 'xMidYMid slice'
                 }
             });
-
             anim.addEventListener('complete', () => {
-                lottieAnimationComplete = true; // Marquer le Lottie comme terminé
-                lottieContainer.classList.add('fade-out'); // Déclencher le fondu CSS
-                
-                // Le `setTimeout` reste pour masquer complètement le conteneur Lottie
+                lottieAnimationComplete = true;
+                lottieContainer.classList.add('fade-out');
                 setTimeout(() => {
                     lottieContainer.style.display = 'none';
                 }, 1000);
-                
-                // Immédiatement vérifier et démarrer l'animation si le panorama est prêt
                 checkAndStartPanoramaIntro();
             });
-
-            // Ajout de l'écouteur d'événement pour le bouton de défilement
             const scrollButton = document.getElementById('scrollButton');
-            if (scrollButton) { // S'assurer que le bouton existe
+            if (scrollButton) {
                 scrollButton.addEventListener('click', () => {
                     const rotationIncrement = 30 * (Math.PI / 180);
                     BABYLON.Animation.CreateAndStartAnimation(
@@ -524,22 +481,17 @@
                     );
                 });
             }
-
-            // NOUVEAU CODE : Gestion de la transition de page
             const linkButton = document.getElementById('linkButton');
             if (linkButton) {
                 linkButton.addEventListener('click', (e) => {
                     e.preventDefault();
-                    // Ajoute la classe de transition au corps de la page
                     document.body.classList.add('transition-out');
-                    // Attend la fin de l'animation de fondu (0.5s) avant de changer de page
                     setTimeout(() => {
                         window.location.href = 'page2.html';
                     }, 500);
                 });
             }
         });
-
         function animateCameraSpin() {
             camera.alpha -= Math.PI * 0.75;
             camera.beta = Math.PI / 2.5;
