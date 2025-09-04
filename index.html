@@ -90,7 +90,7 @@
             z-index: 1001;
         }
         #hamburger-button {
-            width: 40px;
+            width: 50px; /* CHANGEMENT : Ajusté pour des lignes plus longues */
             height: 35px;
             cursor: pointer;
             display: flex;
@@ -130,6 +130,8 @@
             color: #E5005B;
             font-size: 14px;
             white-space: nowrap;
+            text-align: center; /* Pour centrer le texte */
+            min-width: 50px; /* CHANGEMENT : Aligné sur la nouvelle largeur du bouton */
         }
 
         #menu-overlay {
@@ -142,7 +144,7 @@
             z-index: 1000;
             transform: translateX(-100%);
             transition: transform 0.3s ease-in-out;
-            padding: 100px 20px 20px; /* CHANGEMENT : Le padding-top est augmenté pour descendre le contenu */
+            padding: 100px 20px 20px;
             box-shadow: 2px 0 5px rgba(0,0,0,0.5);
             font-family: 'Apex New', sans-serif;
             box-sizing: border-box;
@@ -157,15 +159,15 @@
         #menu-overlay h2 {
             font-size: 20px;
             font-weight: bold;
-            color: #000; /* CHANGEMENT : Couleur du titre en noir */
-            border-bottom: 2px solid #00AFD7; /* CHANGEMENT : Couleur de la bordure en bleu */
+            color: #000;
+            border-bottom: 2px solid #00AFD7;
             padding-bottom: 10px;
             margin-bottom: 20px;
             text-align: center;
         }
         #menu-overlay ul {
-            list-style: disc; /* CHANGEMENT : Ajout des puces de liste */
-            padding: 0 0 0 20px; /* CHANGEMENT : Ajout d'un padding pour les puces */
+            list-style: disc;
+            padding: 0 0 0 20px;
             margin: 0;
         }
         #menu-overlay ul li {
@@ -181,7 +183,7 @@
             transition: color 0.3s ease;
         }
         #menu-overlay ul li a:hover {
-            color: #00AFD7;
+            color: #E5005B;
             font-weight: bold;
         }
         /* FIN DES NOUVEAUX STYLES */
