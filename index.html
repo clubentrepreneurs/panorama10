@@ -3,17 +3,20 @@
 <head>
     <meta charset="UTF-8" />
     <title>GLB + cercles + panorama + menu</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes" />
     <link href="https://fonts.cdnfonts.com/css/apex-new" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.10.2/lottie.min.js"></script>
     <style>
+        /* === Styles pour le corps de la page et le zoom === */
         html, body {
             margin: 0;
             overflow: hidden;
             height: 100%;
-            touch-action: none;
+            touch-action: pan-x pan-y pinch-zoom; /* Permet le zoom par pincement */
             background: none;
+            -webkit-text-size-adjust: 100%; /* Empêche les changements de taille de texte inattendus */
         }
+        
         #renderCanvas {
             width: 100%;
             height: 100%;
@@ -24,23 +27,28 @@
         #renderCanvas.hidden {
             visibility: hidden;
         }
+
+        /* === Styles pour le conteneur Lottie === */
         #lottie-container {
             position: fixed;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
+            width: 100vw; /* Ajusté pour la largeur de la fenêtre */
+            height: 100vh; /* Ajusté pour la hauteur de la fenêtre */
             background-color: white;
             z-index: 9999;
             display: flex;
             justify-content: center;
             align-items: center;
             transition: opacity 1s ease-in-out;
+            overflow: hidden;
         }
         #lottie-container.fade-out {
             opacity: 0;
             pointer-events: none;
         }
+        
+        /* === Styles pour le texte principal === */
         #customText {
             position: absolute;
             bottom: 5vh;
@@ -90,7 +98,7 @@
             z-index: 1001;
         }
         #hamburger-button {
-            width: 50px; /* CHANGEMENT : Ajusté pour des lignes plus longues */
+            width: 50px;
             height: 35px;
             cursor: pointer;
             display: flex;
@@ -128,10 +136,10 @@
             font-family: 'Apex New', sans-serif;
             font-weight: bold;
             color: #E5005B;
-            font-size: 20px;
+            font-size: 14px;
             white-space: nowrap;
-            text-align: center; /* Pour centrer le texte */
-            min-width: 50px; /* CHANGEMENT : Aligné sur la nouvelle largeur du bouton */
+            text-align: center;
+            min-width: 50px;
         }
 
         #menu-overlay {
