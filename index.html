@@ -3,20 +3,17 @@
 <head>
     <meta charset="UTF-8" />
     <title>GLB + cercles + panorama + menu</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
     <link href="https://fonts.cdnfonts.com/css/apex-new" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.10.2/lottie.min.js"></script>
     <style>
-        /* === Styles pour le corps de la page et le zoom === */
         html, body {
             margin: 0;
             overflow: hidden;
             height: 100%;
-            touch-action: pan-x pan-y pinch-zoom; /* Permet le zoom par pincement */
+            touch-action: none;
             background: none;
-            -webkit-text-size-adjust: 100%; /* Empêche les changements de taille de texte inattendus */
         }
-        
         #renderCanvas {
             width: 100%;
             height: 100%;
@@ -27,28 +24,23 @@
         #renderCanvas.hidden {
             visibility: hidden;
         }
-
-        /* === Styles pour le conteneur Lottie === */
         #lottie-container {
             position: fixed;
             top: 0;
             left: 0;
-            width: 100vw; /* Ajusté pour la largeur de la fenêtre */
-            height: 100vh; /* Ajusté pour la hauteur de la fenêtre */
+            width: 100%;
+            height: 100%;
             background-color: white;
             z-index: 9999;
             display: flex;
             justify-content: center;
             align-items: center;
             transition: opacity 1s ease-in-out;
-            overflow: hidden;
         }
         #lottie-container.fade-out {
             opacity: 0;
             pointer-events: none;
         }
-        
-        /* === Styles pour le texte principal === */
         #customText {
             position: absolute;
             bottom: 5vh;
@@ -98,7 +90,7 @@
             z-index: 1001;
         }
         #hamburger-button {
-            width: 50px;
+            width: 40px;
             height: 35px;
             cursor: pointer;
             display: flex;
@@ -138,8 +130,6 @@
             color: #E5005B;
             font-size: 14px;
             white-space: nowrap;
-            text-align: center;
-            min-width: 50px;
         }
 
         #menu-overlay {
@@ -152,7 +142,7 @@
             z-index: 1000;
             transform: translateX(-100%);
             transition: transform 0.3s ease-in-out;
-            padding: 100px 20px 20px;
+            padding: 100px 20px 20px; /* CHANGEMENT : Le padding-top est augmenté pour descendre le contenu */
             box-shadow: 2px 0 5px rgba(0,0,0,0.5);
             font-family: 'Apex New', sans-serif;
             box-sizing: border-box;
@@ -167,15 +157,15 @@
         #menu-overlay h2 {
             font-size: 20px;
             font-weight: bold;
-            color: #000;
-            border-bottom: 2px solid #00AFD7;
+            color: #000; /* CHANGEMENT : Couleur du titre en noir */
+            border-bottom: 2px solid #00AFD7; /* CHANGEMENT : Couleur de la bordure en bleu */
             padding-bottom: 10px;
             margin-bottom: 20px;
             text-align: center;
         }
         #menu-overlay ul {
-            list-style: disc;
-            padding: 0 0 0 20px;
+            list-style: disc; /* CHANGEMENT : Ajout des puces de liste */
+            padding: 0 0 0 20px; /* CHANGEMENT : Ajout d'un padding pour les puces */
             margin: 0;
         }
         #menu-overlay ul li {
@@ -191,7 +181,7 @@
             transition: color 0.3s ease;
         }
         #menu-overlay ul li a:hover {
-            color: #E5005B;
+            color: #00AFD7;
             font-weight: bold;
         }
         /* FIN DES NOUVEAUX STYLES */
@@ -307,7 +297,7 @@
             right: 20px;
         }
         #linkButton {
-            right: 90px; /* CHANGEMENT: Ajusté à 90px pour le repositionner */
+            right: 80px;
             font-size: 16px;
         }
         @media (max-width: 768px) {
