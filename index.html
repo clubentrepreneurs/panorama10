@@ -81,8 +81,6 @@
                 transform: translate(-50%, 0) scale(1);
             }
         }
-
-        /* === Styles pour le menu Hamburger === */
         #menu-container {
             position: fixed;
             top: 20px;
@@ -106,8 +104,6 @@
             background-color: #E5005B;
             transition: all 0.3s ease-in-out;
         }
-        
-        /* Styles pour la transformation en croix */
         #hamburger-button.open .line:nth-child(1) {
             transform: translateY(14px) rotate(45deg);
         }
@@ -117,8 +113,6 @@
         #hamburger-button.open .line:nth-child(3) {
             transform: translateY(-14px) rotate(-45deg);
         }
-
-        /* Style pour le texte "MENU" */
         #hamburger-label {
             position: absolute;
             top: 100%;
@@ -131,7 +125,6 @@
             font-size: 14px;
             white-space: nowrap;
         }
-
         #menu-overlay {
             position: fixed;
             top: 0;
@@ -142,7 +135,7 @@
             z-index: 1000;
             transform: translateX(-100%);
             transition: transform 0.3s ease-in-out;
-            padding: 100px 20px 20px; /* CHANGEMENT : Le padding-top est augmenté pour descendre le contenu */
+            padding: 100px 20px 20px;
             box-shadow: 2px 0 5px rgba(0,0,0,0.5);
             font-family: 'Apex New', sans-serif;
             box-sizing: border-box;
@@ -152,20 +145,18 @@
         #menu-overlay.open {
             transform: translateX(0);
         }
-
-        /* NOUVEAUX STYLES POUR LE MENU */
         #menu-overlay h2 {
             font-size: 20px;
             font-weight: bold;
-            color: #000; /* CHANGEMENT : Couleur du titre en noir */
-            border-bottom: 2px solid #00AFD7; /* CHANGEMENT : Couleur de la bordure en bleu */
+            color: #000;
+            border-bottom: 2px solid #00AFD7;
             padding-bottom: 10px;
             margin-bottom: 20px;
             text-align: center;
         }
         #menu-overlay ul {
-            list-style: disc; /* CHANGEMENT : Ajout des puces de liste */
-            padding: 0 0 0 20px; /* CHANGEMENT : Ajout d'un padding pour les puces */
+            list-style: disc;
+            padding: 0 0 0 20px;
             margin: 0;
         }
         #menu-overlay ul li {
@@ -184,9 +175,6 @@
             color: #00AFD7;
             font-weight: bold;
         }
-        /* FIN DES NOUVEAUX STYLES */
-
-        /* === Cercles animés === */
         .circleContainer {
             position: absolute;
             width: 40px;
@@ -229,8 +217,6 @@
             0% { transform: scale(0); opacity: 0.9; }
             100% { transform: scale(1.5); opacity: 0; }
         }
-
-        /* === Texte overlay des GLB === */
         .text-overlay {
             position: absolute;
             top: 100%;
@@ -246,8 +232,6 @@
             pointer-events: none;
             margin-top: 5px;
         }
-
-        /* === Vidéo responsive === */
         #videoContainer {
             position: absolute;
             top: 50%; left: 50%;
@@ -273,8 +257,6 @@
             font-size: 16px;
             z-index: 101;
         }
-        
-        /* Styles des nouveaux boutons */
         .actionButton {
             position: fixed;
             bottom: 20px;
@@ -299,11 +281,6 @@
         #linkButton {
             right: 80px;
             font-size: 16px;
-        }
-        @media (max-width: 768px) {
-            #scrollButton {
-                display: none;
-            }
         }
         body.transition-out {
             transition: opacity 0.5s ease-in-out;
@@ -576,18 +553,3 @@
     </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
