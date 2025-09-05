@@ -244,28 +244,34 @@
       new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0,1,0), scene);
 
       const modelsWithLabels = [];
-      function loadModelWithLabel(filename, labelId) {
+      function loadModelWithLabel(filename, labelId, offsetY) {
         const label = document.getElementById(labelId);
         BABYLON.SceneLoader.ImportMesh("", "", filename, scene, function(meshes) {
           if (meshes.length > 0) {
-            modelsWithLabels.push({ mesh: meshes[0], label });
+            modelsWithLabels.push({ mesh: meshes[0], label, offsetY });
           }
         });
       }
-      loadModelWithLabel("socleetoiletoque.glb", "label");
-      loadModelWithLabel("agenda.glb", "label2");
-      loadModelWithLabel("computer.glb", "label3");
-      loadModelWithLabel("coffre.glb", "label4");
-      loadModelWithLabel("livres.glb", "label5");
+
+      // Chaque modèle a son propre décalage Y pour le texte
+      loadModelWithLabel("socleetoiletoque.glb", "label", -120);
+      loadModelWithLabel("agenda.glb", "label2", -80);
+      loadModelWithLabel("computer.glb", "label3", -100);
+      loadModelWithLabel("coffre.glb", "label4", -90);
+      loadModelWithLabel("livres.glb", "label5", -70);
 
       scene.registerAfterRender(() => {
-        modelsWithLabels.forEach(({ mesh, label }) => {
+        modelsWithLabels.forEach(({ mesh, label, offsetY }) => {
           const center = mesh.getBoundingInfo().boundingSphere.centerWorld;
-          const proj = BABYLON.Vector3.Project(center, BABYLON.Matrix.Identity(), scene.getTransformMatrix(),
-            camera.viewport.toGlobal(engine.getRenderWidth(), engine.getRenderHeight()));
+          const proj = BABYLON.Vector3.Project(
+            center,
+            BABYLON.Matrix.Identity(),
+            scene.getTransformMatrix(),
+            camera.viewport.toGlobal(engine.getRenderWidth(), engine.getRenderHeight())
+          );
           if (proj.z >= 0 && proj.z <= 1) {
             label.style.left = `${proj.x}px`;
-            label.style.top = `${proj.y + 100}px`;
+            label.style.top = `${proj.y + offsetY}px`;
             label.classList.add("show");
           } else {
             label.classList.remove("show");
@@ -324,3 +330,4 @@
   </script>
 </body>
 </html>
+
