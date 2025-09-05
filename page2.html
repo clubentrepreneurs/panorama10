@@ -83,7 +83,7 @@
     }
     #backButton:hover { background: #e0e0e0; }
 
-    /* === Styles pour le menu Hamburger === */
+    /* === Menu hamburger === */
     #menu-container {
       position: fixed;
       top: 20px;
@@ -162,7 +162,7 @@
     }
     #menu-overlay ul li a:hover { color: #00AFD7; font-weight: bold; }
 
-    /* === Boutons fixes en bas === */
+    /* === Boutons fixes === */
     .actionButton {
       position: fixed;
       bottom: 20px;
@@ -190,12 +190,14 @@
 
   <canvas id="renderCanvas"></canvas>
 
+  <!-- Labels -->
   <div id="label" class="label">LES 4 INCONTOURNABLES</div>
   <div id="label2" class="label">L'emploi du temps</div>
   <div id="label3" class="label">Intranet</div>
   <div id="label4" class="label">Le compte Sésame</div>
   <div id="label5" class="label">Moodle</div>
 
+  <!-- Menu -->
   <div id="menu-container">
     <button id="hamburger-button">
       <span class="line"></span>
@@ -214,6 +216,7 @@
     </ul>
   </div>
 
+  <!-- Vidéo -->
   <div id="videoContainer">
     <iframe id="videoFrame" allow="autoplay" allowfullscreen></iframe>
     <button id="backButton">Retour à la scène 3D</button>
@@ -253,22 +256,26 @@
         });
       }
 
-      // Chaque modèle a son propre décalage Y pour le texte
+      // Associer chaque modèle à un label + offset
       loadModelWithLabel("socleetoiletoque.glb", "label", -120);
       loadModelWithLabel("agenda.glb", "label2", -80);
       loadModelWithLabel("computer.glb", "label3", -100);
       loadModelWithLabel("coffre.glb", "label4", -90);
       loadModelWithLabel("livres.glb", "label5", -70);
 
+      // Positionner les labels à chaque frame
       scene.registerAfterRender(() => {
+        const rect = engine.getRenderingCanvasClientRect();
         modelsWithLabels.forEach(({ mesh, label, offsetY }) => {
           const center = mesh.getBoundingInfo().boundingSphere.centerWorld;
+
           const proj = BABYLON.Vector3.Project(
             center,
             BABYLON.Matrix.Identity(),
             scene.getTransformMatrix(),
-            camera.viewport.toGlobal(engine.getRenderWidth(), engine.getRenderHeight())
+            camera.viewport.toGlobal(rect.width, rect.height)
           );
+
           if (proj.z >= 0 && proj.z <= 1) {
             label.style.left = `${proj.x}px`;
             label.style.top = `${proj.y + offsetY}px`;
@@ -279,6 +286,7 @@
         });
       });
 
+      // Labels ouvrent vidéos
       const videoContainer = document.getElementById("videoContainer");
       const videoFrame = document.getElementById("videoFrame");
       const labelLinks = {
@@ -330,4 +338,3 @@
   </script>
 </body>
 </html>
-
