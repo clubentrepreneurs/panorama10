@@ -100,125 +100,109 @@
       font-style: normal;
     }
 
-
-
-
-
-
-
-
-
+    /* === Styles pour le menu Hamburger === */
+    #menu-container {
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        z-index: 1001;
+    }
+    #hamburger-button {
+        width: 40px;
+        height: 35px;
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        background: none;
+        border: none;
+        padding: 0;
+    }
+    #hamburger-button .line {
+        width: 100%;
+        height: 6px;
+        background-color: #E5005B;
+        transition: all 0.3s ease-in-out;
+    }
     
-     /* === Styles pour le menu Hamburger === */
-        #menu-container {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            z-index: 1001;
-        }
-        #hamburger-button {
-            width: 40px;
-            height: 35px;
-            cursor: pointer;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            background: none;
-            border: none;
-            padding: 0;
-        }
-        #hamburger-button .line {
-            width: 100%;
-            height: 6px;
-            background-color: #E5005B;
-            transition: all 0.3s ease-in-out;
-        }
-        
-        /* Styles pour la transformation en croix */
-        #hamburger-button.open .line:nth-child(1) {
-            transform: translateY(14px) rotate(45deg);
-        }
-        #hamburger-button.open .line:nth-child(2) {
-            opacity: 0;
-        }
-        #hamburger-button.open .line:nth-child(3) {
-            transform: translateY(-14px) rotate(-45deg);
-        }
+    /* Styles pour la transformation en croix */
+    #hamburger-button.open .line:nth-child(1) {
+        transform: translateY(14px) rotate(45deg);
+    }
+    #hamburger-button.open .line:nth-child(2) {
+        opacity: 0;
+    }
+    #hamburger-button.open .line:nth-child(3) {
+        transform: translateY(-14px) rotate(-45deg);
+    }
 
-        /* Style pour le texte "MENU" */
-        #hamburger-label {
-            position: absolute;
-            top: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            margin-top: 5px;
-            font-family: 'Apex New', sans-serif;
-            font-weight: bold;
-            color: #E5005B;
-            font-size: 14px;
-            white-space: nowrap;
-        }
+    /* Style pour le texte "MENU" */
+    #hamburger-label {
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        margin-top: 5px;
+        font-family: 'Apex New', sans-serif;
+        font-weight: bold;
+        color: #E5005B;
+        font-size: 14px;
+        white-space: nowrap;
+    }
 
-        #menu-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 250px;
-            height: 100%;
-            background-color: rgba(255, 255, 255, 0.9);
-            z-index: 1000;
-            transform: translateX(-100%);
-            transition: transform 0.3s ease-in-out;
-            padding: 100px 20px 20px; /* CHANGEMENT : Le padding-top est augmenté pour descendre le contenu */
-            box-shadow: 2px 0 5px rgba(0,0,0,0.5);
-            font-family: 'Apex New', sans-serif;
-            box-sizing: border-box;
-            display: flex;
-            flex-direction: column;
-        }
-        #menu-overlay.open {
-            transform: translateX(0);
-        }
+    #menu-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 250px;
+        height: 100%;
+        background-color: rgba(255, 255, 255, 0.9);
+        z-index: 1000;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease-in-out;
+        padding: 100px 20px 20px;
+        box-shadow: 2px 0 5px rgba(0,0,0,0.5);
+        font-family: 'Apex New', sans-serif;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+    }
+    #menu-overlay.open {
+        transform: translateX(0);
+    }
 
-        /* NOUVEAUX STYLES POUR LE MENU */
-        #menu-overlay h2 {
-            font-size: 20px;
-            font-weight: bold;
-            color: #000; /* CHANGEMENT : Couleur du titre en noir */
-            border-bottom: 2px solid #00AFD7; /* CHANGEMENT : Couleur de la bordure en bleu */
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-        #menu-overlay ul {
-            list-style: disc; /* CHANGEMENT : Ajout des puces de liste */
-            padding: 0 0 0 20px; /* CHANGEMENT : Ajout d'un padding pour les puces */
-            margin: 0;
-        }
-        #menu-overlay ul li {
-            margin-bottom: 15px;
-        }
-        #menu-overlay ul li a {
-            text-decoration: none;
-            color: black;
-            font-size: 16px;
-            font-weight: normal;
-            display: block;
-            padding: 5px 0;
-            transition: color 0.3s ease;
-        }
-        #menu-overlay ul li a:hover {
-            color: #00AFD7;
-            font-weight: bold;
-        }
-        /* FIN DES NOUVEAUX STYLES */
-
-
-
-
-
-
-    
+    /* NOUVEAUX STYLES POUR LE MENU */
+    #menu-overlay h2 {
+        font-size: 20px;
+        font-weight: bold;
+        color: #000;
+        border-bottom: 2px solid #00AFD7;
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+        text-align: center;
+    }
+    #menu-overlay ul {
+        list-style: disc;
+        padding: 0 0 0 20px;
+        margin: 0;
+    }
+    #menu-overlay ul li {
+        margin-bottom: 15px;
+    }
+    #menu-overlay ul li a {
+        text-decoration: none;
+        color: black;
+        font-size: 16px;
+        font-weight: normal;
+        display: block;
+        padding: 5px 0;
+        transition: color 0.3s ease;
+    }
+    #menu-overlay ul li a:hover {
+        color: #00AFD7;
+        font-weight: bold;
+    }
+    /* FIN DES NOUVEAUX STYLES */
   </style>
 </head>
 <body>
@@ -230,6 +214,24 @@
   <div id="label3" class="label">Intranet</div>
   <div id="label4" class="label">Le compte Sésame</div>
   <div id="label5" class="label">Moodle</div>
+
+  <div id="menu-container">
+    <button id="hamburger-button">
+      <span class="line"></span>
+      <span class="line"></span>
+      <span class="line"></span>
+    </button>
+    <span id="hamburger-label">MENU</span>
+  </div>
+  
+  <div id="menu-overlay">
+    <h2>Toutes vos ressources pour réussir à l'Université</h2>
+    <ul>
+      <li><a href="page2.html">Vidéos "Réussir votre rentrée 2025"</a></li>
+      <li><a href="https://www.youtube.com/watch?v=lUU1G-6klpI">Vidéo "Compte Sésame"</a></li>
+      <li><a href="https://www.youtube.com/watch?v=SWIDVGO3Gg0">Vidéo "Intranet étudiant"</a></li>
+    </ul>
+  </div>
 
   <div id="videoContainer">
     <iframe id="videoFrame" allow="autoplay" allowfullscreen></iframe>
@@ -245,10 +247,8 @@
     function initBabylon() {
       const engine = new BABYLON.Engine(canvas, true);
       const scene = new BABYLON.Scene(engine);
-      // Rendre le fond de la scène transparent car le panorama prendra toute la place
       scene.clearColor = new BABYLON.Color4(0, 0, 0, 0);
 
-      // Création du fond panoramique à 360°
       const panoFile = "backgroundstatiqueexportepourleweb4.png";
       const dome = new BABYLON.PhotoDome("panorama", panoFile, { resolution: 32, size: 1000 }, scene);
       dome.imageMode = BABYLON.PhotoDome.MODE_MONOSCOPIC;
@@ -353,6 +353,19 @@
       window.addEventListener("resize", () => engine.resize());
       engine.runRenderLoop(() => scene.render());
     }
+
+    // Ajout de la logique pour le menu hamburger
+    document.addEventListener("DOMContentLoaded", () => {
+        const hamburgerButton = document.getElementById('hamburger-button');
+        const menuOverlay = document.getElementById('menu-overlay');
+
+        if (hamburgerButton && menuOverlay) {
+            hamburgerButton.addEventListener('click', () => {
+                hamburgerButton.classList.toggle('open');
+                menuOverlay.classList.toggle('open');
+            });
+        }
+    });
 
     initBabylon();
   </script>
