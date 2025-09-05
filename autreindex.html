@@ -392,7 +392,7 @@
                 domeMat.useAlphaFromDiffuseTexture = false;
                 domeMat.transparencyMode = BABYLON.Material.MATERIAL_OPAQUE;
             } else {
-                domeMat.diffuseTexture.hasAlpha = true;
+                domeMat.diff.useTexture.hasAlpha = true;
                 domeMat.useAlphaFromDiffuseTexture = true;
                 domeMat.transparencyMode = BABYLON.Material.MATERIAL_ALPHABLEND;
                 domeMat.backFaceCulling = false;
@@ -451,7 +451,8 @@
         gifFiles.forEach((file, index) => {
             const gifElement = document.getElementById(`gif_${index + 1}`);
             const circle = createCircle(index + 1, circleLabels[index]);
-            circleMap.set(circle, gifElement);
+            // On associe le cercle au GIF via un objet pour une meilleure gestion
+            circleMap.set(circle, { gif: gifElement, angle: customAngles[index] });
             
             circle.addEventListener('click', () => {
                 const embedUrl = getEmbedUrl(videoUrls[index]);
@@ -472,31 +473,25 @@
             const viewportWidth = engine.getRenderWidth();
             const viewportHeight = engine.getRenderHeight();
 
-            customAngles.forEach((angle, index) => {
-                const gifElement = document.getElementById(`gif_${index + 1}`);
-                const circleElement = document.getElementById(`circle_${index + 1}`);
+            circleMap.forEach((data, circleElement) => {
+                const gifElement = data.gif;
+                const angle = data.angle;
 
-                // Calculer la position 3D de l'élément
+                // Créer une position 3D virtuelle pour l'élément
                 const worldPosition = new BABYLON.Vector3(
                     radius * Math.sin(angle),
                     0,
                     radius * Math.cos(angle)
                 );
 
-                // Orienter la position 3D vers l'avant de la caméra
-                const targetPosition = BABYLON.Vector3.TransformCoordinates(
-                    worldPosition,
-                    BABYLON.Matrix.RotationY(-camera.alpha)
-                );
-                
                 const projectedPosition = BABYLON.Vector3.Project(
-                    targetPosition,
+                    worldPosition,
                     BABYLON.Matrix.IdentityReadOnly,
                     scene.getTransformMatrix(),
                     camera.viewport.toGlobal(viewportWidth, viewportHeight)
                 );
 
-                // Si l'élément est devant la caméra, l'afficher
+                // Si l'élément est devant la caméra (la valeur z est entre 0 et 1), l'afficher
                 if (projectedPosition.z >= 0 && projectedPosition.z <= 1) {
                     gifElement.style.display = "block";
                     gifElement.style.left = `${projectedPosition.x}px`;
