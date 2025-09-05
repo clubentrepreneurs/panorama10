@@ -81,8 +81,6 @@
                 transform: translate(-50%, 0) scale(1);
             }
         }
-
-        /* === Styles pour le menu Hamburger === */
         #menu-container {
             position: fixed;
             top: 20px;
@@ -106,8 +104,6 @@
             background-color: #E5005B;
             transition: all 0.3s ease-in-out;
         }
-        
-        /* Styles pour la transformation en croix */
         #hamburger-button.open .line:nth-child(1) {
             transform: translateY(14px) rotate(45deg);
         }
@@ -117,8 +113,6 @@
         #hamburger-button.open .line:nth-child(3) {
             transform: translateY(-14px) rotate(-45deg);
         }
-
-        /* Style pour le texte "MENU" */
         #hamburger-label {
             position: absolute;
             top: 100%;
@@ -131,7 +125,6 @@
             font-size: 14px;
             white-space: nowrap;
         }
-
         #menu-overlay {
             position: fixed;
             top: 0;
@@ -152,8 +145,6 @@
         #menu-overlay.open {
             transform: translateX(0);
         }
-
-        /* NOUVEAUX STYLES POUR LE MENU */
         #menu-overlay h2 {
             font-size: 20px;
             font-weight: bold;
@@ -184,9 +175,6 @@
             color: #00AFD7;
             font-weight: bold;
         }
-        /* FIN DES NOUVEAUX STYLES */
-
-        /* === Cercles animés === */
         .circleContainer {
             position: absolute;
             width: 40px;
@@ -229,19 +217,15 @@
             0% { transform: scale(0); opacity: 0.9; }
             100% { transform: scale(1.5); opacity: 0; }
         }
-
-        /* Nouveaux styles pour les GIFs */
         .gif-overlay {
             position: absolute;
             transform: translate(-50%, -50%);
-            z-index: 15; /* Sous les cercles */
-            pointer-events: none; /* Les clics passent à l'élément du cercle */
-            width: 200px; /* Adaptez la taille selon vos besoins */
+            z-index: 15;
+            pointer-events: none;
+            width: 200px;
             height: auto;
-            display: none; /* Caché par défaut */
+            display: none;
         }
-
-        /* === Texte overlay des GLB === */
         .text-overlay {
             position: absolute;
             top: 100%;
@@ -251,20 +235,18 @@
             background-color: rgba(255, 255, 255, 0.7);
             padding: 2px 8px;
             border-radius: 3px;
-            font-family: 'Apex New', sans-serif; /* POLICE APEX NEW ICI */
+            font-family: 'Apex New', sans-serif;
             font-size: 26px;
             white-space: nowrap;
             pointer-events: none;
             margin-top: 5px;
         }
-
-        /* === Vidéo responsive === */
         #videoContainer {
             position: absolute;
             top: 50%; 
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 50vw; /* Demi-écran sur les ordinateurs */
+            width: 50vw;
             aspect-ratio: 16/9;
             display: none;
             z-index: 100;
@@ -275,13 +257,11 @@
             height: 100%;
             border: none;
         }
-        /* Style pour les petits écrans */
         @media (max-width: 768px) {
             #videoContainer {
-                width: 90vw; /* Plus grand sur mobile */
+                width: 90vw;
             }
         }
-        
         #closeButton {
             position: absolute;
             top: -40px; 
@@ -294,8 +274,6 @@
             font-size: 16px;
             z-index: 101;
         }
-        
-        /* Styles des nouveaux boutons */
         .actionButton {
             position: fixed;
             bottom: 20px;
@@ -320,11 +298,6 @@
         #linkButton {
             right: 80px;
             font-size: 16px;
-        }
-        @media (max-width: 768px) {
-            #scrollButton {
-                display: none;
-            }
         }
         body.transition-out {
             transition: opacity 0.5s ease-in-out;
@@ -402,7 +375,7 @@
                 domeMat.useAlphaFromDiffuseTexture = false;
                 domeMat.transparencyMode = BABYLON.Material.MATERIAL_OPAQUE;
             } else {
-                domeMat.diffuseTexture.hasAlpha = true; // Correction ici
+                domeMat.diffuseTexture.hasAlpha = true;
                 domeMat.useAlphaFromDiffuseTexture = true;
                 domeMat.transparencyMode = BABYLON.Material.MATERIAL_ALPHABLEND;
                 domeMat.backFaceCulling = false;
@@ -457,11 +430,9 @@
             return `https://www.youtube.com/embed/${videoId}?modestbranding=1&rel=0&playsinline=1&autoplay=1`;
         }
         
-        // Nouvelle logique pour les GIFs et les cercles
         gifFiles.forEach((file, index) => {
             const gifElement = document.getElementById(`gif_${index + 1}`);
             const circle = createCircle(index + 1, circleLabels[index]);
-            // On associe le cercle au GIF via un objet pour une meilleure gestion
             circleMap.set(circle, { gif: gifElement, angle: customAngles[index] });
             
             circle.addEventListener('click', () => {
@@ -477,8 +448,6 @@
             videoContainer.style.display = "none";
             camera.attachControl(canvas, true);
         });
-
-        // Fonction pour mettre à jour la position des éléments HTML
         function updateElementsPosition() {
             const viewportWidth = engine.getRenderWidth();
             const viewportHeight = engine.getRenderHeight();
@@ -486,22 +455,17 @@
             circleMap.forEach((data, circleElement) => {
                 const gifElement = data.gif;
                 const angle = data.angle;
-
-                // Créer une position 3D virtuelle pour l'élément
                 const worldPosition = new BABYLON.Vector3(
                     radius * Math.sin(angle),
                     0,
                     radius * Math.cos(angle)
                 );
-
                 const projectedPosition = BABYLON.Vector3.Project(
                     worldPosition,
                     BABYLON.Matrix.IdentityReadOnly,
                     scene.getTransformMatrix(),
                     camera.viewport.toGlobal(viewportWidth, viewportHeight)
                 );
-
-                // Si l'élément est devant la caméra (la valeur z est entre 0 et 1), l'afficher
                 if (projectedPosition.z >= 0 && projectedPosition.z <= 1) {
                     gifElement.style.display = "block";
                     gifElement.style.left = `${projectedPosition.x}px`;
@@ -517,14 +481,11 @@
                 }
             });
         }
-
         engine.runRenderLoop(() => {
             scene.render();
             updateElementsPosition();
         });
-
         window.addEventListener("resize", () => engine.resize());
-
         const hamburgerButton = document.getElementById('hamburger-button');
         const menuOverlay = document.getElementById('menu-overlay');
         hamburgerButton.addEventListener('click', () => {
