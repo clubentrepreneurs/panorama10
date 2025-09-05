@@ -241,6 +241,23 @@
             display: none; /* Caché par défaut */
         }
 
+        /* === Texte overlay des GLB === */
+        .text-overlay {
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            color: black;
+            background-color: rgba(255, 255, 255, 0.7);
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-family: 'Apex New', sans-serif; /* POLICE APEX NEW ICI */
+            font-size: 26px;
+            white-space: nowrap;
+            pointer-events: none;
+            margin-top: 5px;
+        }
+
         /* === Vidéo responsive === */
         #videoContainer {
             position: absolute;
@@ -385,7 +402,7 @@
                 domeMat.useAlphaFromDiffuseTexture = false;
                 domeMat.transparencyMode = BABYLON.Material.MATERIAL_OPAQUE;
             } else {
-                domeMat.diffuseTexture.hasAlpha = true;
+                domeMat.diffuseTexture.hasAlpha = true; // Correction ici
                 domeMat.useAlphaFromDiffuseTexture = true;
                 domeMat.transparencyMode = BABYLON.Material.MATERIAL_ALPHABLEND;
                 domeMat.backFaceCulling = false;
