@@ -190,12 +190,14 @@
 
   <canvas id="renderCanvas"></canvas>
 
-  <div id="label1" class="label">LES 4 INCONTOURNABLES</div>
+  <!-- Labels -->
+  <div id="label" class="label">LES 4 INCONTOURNABLES</div>
   <div id="label2" class="label">L'emploi du temps</div>
   <div id="label3" class="label">Intranet</div>
   <div id="label4" class="label">Le compte Sésame</div>
   <div id="label5" class="label">Moodle</div>
 
+  <!-- Menu -->
   <div id="menu-container">
     <button id="hamburger-button">
       <span class="line"></span>
@@ -214,11 +216,13 @@
     </ul>
   </div>
 
+  <!-- Vidéo -->
   <div id="videoContainer">
     <iframe id="videoFrame" allow="autoplay" allowfullscreen></iframe>
     <button id="backButton">Retour à la scène 3D</button>
   </div>
 
+  <!-- Boutons fixes -->
   <button id="scrollButton" class="actionButton">&#x21bb;</button>
   <button id="linkButton" class="actionButton">Go</button>
 
@@ -243,22 +247,21 @@
       new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0,1,0), scene);
 
       const modelsWithLabels = [];
-      const modelData = [
-        { filename: "socleetoiletoque.glb", labelId: "label1", offsetY: -120 },
-        { filename: "agenda.glb", labelId: "label2", offsetY: -80 },
-        { filename: "computer.glb", labelId: "label3", offsetY: -100 },
-        { filename: "coffre.glb", labelId: "label4", offsetY: -90 },
-        { filename: "livres.glb", labelId: "label5", offsetY: -70 }
-      ];
-
-      modelData.forEach(({ filename, labelId, offsetY }) => {
+      function loadModelWithLabel(filename, labelId, offsetY) {
         const label = document.getElementById(labelId);
         BABYLON.SceneLoader.ImportMesh("", "", filename, scene, function(meshes) {
           if (meshes.length > 0) {
             modelsWithLabels.push({ mesh: meshes[0], label, offsetY });
           }
         });
-      });
+      }
+
+      // Associer chaque modèle à un label + offset
+      loadModelWithLabel("socleetoiletoque.glb", "label", -120);
+      loadModelWithLabel("agenda.glb", "label2", -80);
+      loadModelWithLabel("computer.glb", "label3", -100);
+      loadModelWithLabel("coffre.glb", "label4", -90);
+      loadModelWithLabel("livres.glb", "label5", -70);
 
       // Positionner les labels à chaque frame
       scene.registerAfterRender(() => {
@@ -266,9 +269,10 @@
         modelsWithLabels.forEach(({ mesh, label, offsetY }) => {
           const center = mesh.getBoundingInfo().boundingSphere.centerWorld;
 
+          // ✅ Utiliser la worldMatrix du mesh
           const proj = BABYLON.Vector3.Project(
             center,
-            BABYLON.Matrix.Identity(),
+            mesh.getWorldMatrix(),
             scene.getTransformMatrix(),
             camera.viewport.toGlobal(rect.width, rect.height)
           );
@@ -287,7 +291,7 @@
       const videoContainer = document.getElementById("videoContainer");
       const videoFrame = document.getElementById("videoFrame");
       const labelLinks = {
-        label1: "https://www.youtube.com/embed/Jgcb7hjdgaU?autoplay=1",
+        label: "https://www.youtube.com/embed/Jgcb7hjdgaU?autoplay=1",
         label2: "https://www.youtube.com/embed/lUU1G-6klpI?autoplay=1",
         label3: "https://www.youtube.com/embed/SWIDVGO3Gg0?autoplay=1",
         label4: "https://www.youtube.com/embed/lUU1G-6klpI?autoplay=1",
@@ -329,8 +333,9 @@
         hamburgerButton.classList.toggle('open');
         menuOverlay.classList.toggle('open');
       });
-      initBabylon();
     });
+
+    initBabylon();
   </script>
 </body>
 </html>
