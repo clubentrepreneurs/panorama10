@@ -419,6 +419,13 @@
                 mesh.scaling = new BABYLON.Vector3(50, 50, 50);
                 const pivot = new BABYLON.TransformNode("pivot_" + index, scene);
                 mesh.position.z = radius;
+
+                // Modifiez la position du modèle "livres2.glb" pour le rapprocher du centre.
+                if (file === "livres2.glb") {
+                    mesh.position.x = -50;
+                    mesh.position.y = 20;
+                }
+
                 if (customAngles[index] !== undefined) {
                     pivot.rotation.y = customAngles[index];
                 }
