@@ -22,7 +22,25 @@
       z-index: 0;
     }
 
-    /* Le style .label a été supprimé car les éléments sont supprimés */
+    /* Styles pour les labels overlay */
+    .label {
+      position: absolute;
+      padding: 8px 14px;
+      color: white;
+      font-size: 24px; /* Ajustez si nécessaire */
+      font-weight: bold;
+      background: rgba(0, 0, 0, 0.4);
+      border-radius: 12px;
+      pointer-events: none; /* Important : ne pas intercepter les clics sur les modèles */
+      z-index: 5;
+      transform: translate(-50%, -50%);
+      display: none;
+      text-shadow: 1px 1px 3px black;
+      transition: opacity 0.5s ease;
+      opacity: 0;
+      font-family: 'Apex New', sans-serif; /* Application de la police */
+    }
+    .label.show { display: block; opacity: 1; }
 
     #videoContainer {
       display: none;
@@ -169,6 +187,12 @@
 
   <canvas id="renderCanvas"></canvas>
 
+  <div id="label1" class="label">Les 4 incontournables</div>
+  <div id="label2" class="label">Emploi du temps</div>
+  <div id="label3" class="label">Intranet</div>
+  <div id="label4" class="label">Compte Sésame</div>
+  <div id="label5" class="label">Moodle</div>
+
   <div id="menu-container">
     <button id="hamburger-button">
       <span class="line"></span>
@@ -215,34 +239,65 @@
 
       new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0,1,0), scene);
 
-      const modelLinks = {
-        "socleetoiletoque.glb": "https://www.youtube.com/embed/Jgcb7hjdgaU?autoplay=1",
-        "agenda.glb": "https://www.youtube.com/embed/lUU1G-6klpI?autoplay=1",
-        "computer.glb": "https://www.youtube.com/embed/SWIDVGO3Gg0?autoplay=1",
-        "coffre.glb": "https://www.youtube.com/embed/lUU1G-6klpI?autoplay=1",
-        "livres.glb": "https://www.youtube.com/embed/T6CI_hIbJIA?autoplay=1"
-      };
+      const modelsAndLabels = []; // Stocke les meshes et leurs labels associés
 
-      for (const [filename, url] of Object.entries(modelLinks)) {
-        BABYLON.SceneLoader.ImportMesh("", "", filename, scene, function(meshes) {
+      const modelData = [
+        { filename: "socleetoiletoque.glb", labelId: "label1", text: "Les 4 incontournables", offsetY: -120, videoUrl: "https://www.youtube.com/embed/Jgcb7hjdgaU?autoplay=1" },
+        { filename: "agenda.glb", labelId: "label2", text: "Emploi du temps", offsetY: -80, videoUrl: "https://www.youtube.com/embed/lUU1G-6klpI?autoplay=1" },
+        { filename: "computer.glb", labelId: "label3", text: "Intranet", offsetY: -100, videoUrl: "https://www.youtube.com/embed/SWIDVGO3Gg0?autoplay=1" },
+        { filename: "coffre.glb", labelId: "label4", text: "Compte Sésame", offsetY: -90, videoUrl: "https://www.youtube.com/embed/lUU1G-6klpI?autoplay=1" },
+        { filename: "livres.glb", labelId: "label5", text: "Moodle", offsetY: -70, videoUrl: "https://www.youtube.com/embed/T6CI_hIbJIA?autoplay=1" }
+      ];
+
+      modelData.forEach(data => {
+        const label = document.getElementById(data.labelId);
+        label.textContent = data.text; // S'assurer que le texte est correct
+
+        BABYLON.SceneLoader.ImportMesh("", "", data.filename, scene, function(meshes) {
           if (meshes.length > 0) {
             const mesh = meshes[0];
+            modelsAndLabels.push({ mesh: mesh, label: label, offsetY: data.offsetY });
+
             mesh.isPickable = true; // Rendre le maillage cliquable
             mesh.actionManager = new BABYLON.ActionManager(scene);
             mesh.actionManager.registerAction(
               new BABYLON.ExecuteCodeAction(
                 BABYLON.ActionManager.OnPickTrigger,
                 function () {
-                  videoFrame.src = url;
+                  videoFrame.src = data.videoUrl;
                   videoContainer.style.display = "flex";
                 }
               )
             );
           }
         });
-      }
+      });
 
-      // La boucle de rendu pour les labels a été supprimée
+      // Positionner les labels à chaque frame
+      scene.registerAfterRender(() => {
+        const rect = engine.getRenderingCanvasClientRect();
+        modelsAndLabels.forEach(({ mesh, label, offsetY }) => {
+          if (!mesh || !label) return; // S'assurer que le mesh et le label existent
+
+          const center = mesh.getBoundingInfo().boundingSphere.centerWorld;
+
+          const proj = BABYLON.Vector3.Project(
+            center,
+            mesh.getWorldMatrix(), // Utiliser la worldMatrix du mesh pour une meilleure précision
+            scene.getTransformMatrix(),
+            camera.viewport.toGlobal(rect.width, rect.height)
+          );
+
+          // Ajuster la visibilité et la position
+          if (proj.z >= 0 && proj.z <= 1) {
+            label.style.left = `${proj.x}px`;
+            label.style.top = `${proj.y + offsetY}px`;
+            label.classList.add("show");
+          } else {
+            label.classList.remove("show");
+          }
+        });
+      });
 
       const videoContainer = document.getElementById("videoContainer");
       const videoFrame = document.getElementById("videoFrame");
