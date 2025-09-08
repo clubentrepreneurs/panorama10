@@ -22,28 +22,7 @@
       z-index: 0;
     }
 
-    .label {
-      position: absolute;
-      padding: 8px 14px;
-      color: white;
-      font-size: 24px;
-      font-weight: bold;
-      background: rgba(0, 0, 0, 0.4);
-      border-radius: 12px;
-      pointer-events: auto;
-      z-index: 5;
-      transform: translate(-50%, -50%);
-      display: none;
-      cursor: pointer;
-      text-shadow: 1px 1px 3px black;
-      transition: transform 0.3s ease, opacity 0.5s ease;
-      opacity: 0;
-    }
-    .label:hover {
-      background: rgba(255, 255, 255, 0.2);
-      transform: translate(-50%, -55%) scale(1.05);
-    }
-    .label.show { display: block; opacity: 1; }
+    /* Le style .label a été supprimé car les éléments sont supprimés */
 
     #videoContainer {
       display: none;
@@ -190,14 +169,6 @@
 
   <canvas id="renderCanvas"></canvas>
 
-  <!-- Labels -->
-  <div id="label" class="label">LES 4 INCONTOURNABLES</div>
-  <div id="label2" class="label">L'emploi du temps</div>
-  <div id="label3" class="label">Intranet</div>
-  <div id="label4" class="label">Le compte Sésame</div>
-  <div id="label5" class="label">Moodle</div>
-
-  <!-- Menu -->
   <div id="menu-container">
     <button id="hamburger-button">
       <span class="line"></span>
@@ -216,13 +187,11 @@
     </ul>
   </div>
 
-  <!-- Vidéo -->
   <div id="videoContainer">
     <iframe id="videoFrame" allow="autoplay" allowfullscreen></iframe>
     <button id="backButton">Retour à la scène 3D</button>
   </div>
 
-  <!-- Boutons fixes -->
   <button id="scrollButton" class="actionButton">&#x21bb;</button>
   <button id="linkButton" class="actionButton">Go</button>
 
@@ -246,63 +215,38 @@
 
       new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0,1,0), scene);
 
-      const modelsWithLabels = [];
-      function loadModelWithLabel(filename, labelId, offsetY) {
-        const label = document.getElementById(labelId);
+      const modelLinks = {
+        "socleetoiletoque.glb": "https://www.youtube.com/embed/Jgcb7hjdgaU?autoplay=1",
+        "agenda.glb": "https://www.youtube.com/embed/lUU1G-6klpI?autoplay=1",
+        "computer.glb": "https://www.youtube.com/embed/SWIDVGO3Gg0?autoplay=1",
+        "coffre.glb": "https://www.youtube.com/embed/lUU1G-6klpI?autoplay=1",
+        "livres.glb": "https://www.youtube.com/embed/T6CI_hIbJIA?autoplay=1"
+      };
+
+      for (const [filename, url] of Object.entries(modelLinks)) {
         BABYLON.SceneLoader.ImportMesh("", "", filename, scene, function(meshes) {
           if (meshes.length > 0) {
-            modelsWithLabels.push({ mesh: meshes[0], label, offsetY });
+            const mesh = meshes[0];
+            mesh.isPickable = true; // Rendre le maillage cliquable
+            mesh.actionManager = new BABYLON.ActionManager(scene);
+            mesh.actionManager.registerAction(
+              new BABYLON.ExecuteCodeAction(
+                BABYLON.ActionManager.OnPickTrigger,
+                function () {
+                  videoFrame.src = url;
+                  videoContainer.style.display = "flex";
+                }
+              )
+            );
           }
         });
       }
 
-      // Associer chaque modèle à un label + offset
-      loadModelWithLabel("socleetoiletoque.glb", "label", -120);
-      loadModelWithLabel("agenda.glb", "label2", -80);
-      loadModelWithLabel("computer.glb", "label3", -100);
-      loadModelWithLabel("coffre.glb", "label4", -90);
-      loadModelWithLabel("livres.glb", "label5", -70);
+      // La boucle de rendu pour les labels a été supprimée
 
-      // Positionner les labels à chaque frame
-      scene.registerAfterRender(() => {
-        const rect = engine.getRenderingCanvasClientRect();
-        modelsWithLabels.forEach(({ mesh, label, offsetY }) => {
-          const center = mesh.getBoundingInfo().boundingSphere.centerWorld;
-
-          // ✅ Utiliser la worldMatrix du mesh
-          const proj = BABYLON.Vector3.Project(
-            center,
-            mesh.getWorldMatrix(),
-            scene.getTransformMatrix(),
-            camera.viewport.toGlobal(rect.width, rect.height)
-          );
-
-          if (proj.z >= 0 && proj.z <= 1) {
-            label.style.left = `${proj.x}px`;
-            label.style.top = `${proj.y + offsetY}px`;
-            label.classList.add("show");
-          } else {
-            label.classList.remove("show");
-          }
-        });
-      });
-
-      // Labels ouvrent vidéos
       const videoContainer = document.getElementById("videoContainer");
       const videoFrame = document.getElementById("videoFrame");
-      const labelLinks = {
-        label: "https://www.youtube.com/embed/Jgcb7hjdgaU?autoplay=1",
-        label2: "https://www.youtube.com/embed/lUU1G-6klpI?autoplay=1",
-        label3: "https://www.youtube.com/embed/SWIDVGO3Gg0?autoplay=1",
-        label4: "https://www.youtube.com/embed/lUU1G-6klpI?autoplay=1",
-        label5: "https://www.youtube.com/embed/T6CI_hIbJIA?autoplay=1"
-      };
-      for (const [id, url] of Object.entries(labelLinks)) {
-        document.getElementById(id).addEventListener("click", () => {
-          videoFrame.src = url;
-          videoContainer.style.display = "flex";
-        });
-      }
+      
       document.getElementById("backButton").addEventListener("click", () => {
         videoFrame.src = "";
         videoContainer.style.display = "none";
@@ -333,9 +277,8 @@
         hamburgerButton.classList.toggle('open');
         menuOverlay.classList.toggle('open');
       });
+      initBabylon();
     });
-
-    initBabylon();
   </script>
 </body>
 </html>
