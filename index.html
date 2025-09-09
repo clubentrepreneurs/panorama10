@@ -440,12 +440,13 @@
                 mesh.parent = pivot;
                 const circle = createCircle(index + 1, circleLabels[index]);
                 circleMap.set(mesh, circle);
-                circle.addEventListener('click', () => {
-                    const embedUrl = getEmbedUrl(videoUrls[index]);
-                    videoPlayer.src = embedUrl;
-                    videoContainer.style.display = "block";
-                    camera.detachControl(canvas);
-                });
+                // On supprime/désactive l'ouverture vidéo au clic
+// circle.addEventListener('click', () => {
+//     const embedUrl = getEmbedUrl(videoUrls[index]);
+//     videoPlayer.src = embedUrl;
+//     videoContainer.style.display = "block";
+//     camera.detachControl(canvas);
+// });
             });
         });
         closeButton.addEventListener('click', () => {
