@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8" />
-    <title>GLB + panorama + menu</title>
+    <title>GLB + cercles + panorama + menu</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
     <link href="https://fonts.cdnfonts.com/css/apex-new" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.10.2/lottie.min.js"></script>
@@ -175,6 +175,88 @@
             color: #00AFD7;
             font-weight: bold;
         }
+        .circleContainer {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            z-index: 20;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            pointer-events: auto;
+        }
+        .circle {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 2px solid red;
+            animation: pulse 2s infinite ease-in-out;
+        }
+        .circle::after {
+            content: "";
+            position: absolute;
+            width: 130%;
+            height: 130%;
+            border-radius: 50%;
+            border: 4px solid rgba(255, 0, 0, 0.7);
+            transform: scale(0);
+            animation: growFade 2s infinite ease-out;
+            animation-delay: 0.5s;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        @keyframes growFade {
+            0% { transform: scale(0); opacity: 0.9; }
+            100% { transform: scale(1.5); opacity: 0; }
+        }
+        .text-overlay {
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            color: black;
+            background-color: rgba(255, 255, 255, 0.7);
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-family: 'Apex New', sans-serif;
+            font-size: 26px;
+            white-space: nowrap;
+            pointer-events: none;
+            margin-top: 5px;
+        }
+        #videoContainer {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%; max-width: 800px;
+            aspect-ratio: 16/9;
+            display: none;
+            z-index: 100;
+            background: black;
+        }
+        #videoContainer iframe {
+            width: 100%; height: 100%;
+            border: none;
+        }
+        #closeButton {
+            position: absolute;
+            top: -40px; right: 0;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 16px;
+            z-index: 101;
+        }
         .actionButton {
             position: fixed;
             bottom: 20px;
@@ -195,6 +277,10 @@
         }
         #scrollButton {
             right: 20px;
+        }
+        #linkButton {
+            right: 80px;
+            font-size: 16px;
         }
         body.transition-out {
             transition: opacity 0.5s ease-in-out;
@@ -226,8 +312,15 @@
             <li><a href="page4.html">Le laboratoire numérique des compétences : boostez votre réussite !"</a></li>
         </ul>
     </div>
+    <div id="videoContainer">
+        <button id="closeButton">Fermer</button>
+        <iframe id="videoPlayer" allowfullscreen allow="autoplay; encrypted-media"></iframe>
+    </div>
     <button id="scrollButton" class="actionButton">
         &#x21bb; </button>
+    <button id="linkButton" class="actionButton">
+        Go
+    </button>
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
     <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
     <script>
@@ -277,9 +370,17 @@
             const panoFile = isSupported ? "test7.webp" : "abstract1.png";
             createPhotoDome(panoFile);
         });
-        
+        const circleMap = new Map();
+        function createCircle(id, text) {
+            const container = document.createElement("div");
+            container.id = "circle_" + id;
+            container.classList.add("circleContainer");
+            container.innerHTML = `<div class="circle"></div><div class="text-overlay">${text}</div>`;
+            document.body.appendChild(container);
+            return container;
+        }
         const glbFiles = ["IA.glb", "socleetoiletoque2.glb", "labonumerique.glb", "bluebot.glb"];
-        const urls = [
+        const videoUrls = [
             "https://www.youtube.com/watch?v=lUU1G-6klpI",
             "https://www.youtube.com/watch?v=SWIDVGO3Gg0",
             "https://clubentrepreneurs.github.io/panorama10/page3.html",
@@ -292,7 +393,19 @@
             214 * (Math.PI / 180)
         ];
         const radius = 400;
-        
+        const circleLabels = [
+            "Bienvenue",
+            "Compte Sésame",
+            "Intranet étudiant",
+            "Réussir sa rentrée"
+        ];
+        const videoContainer = document.getElementById("videoContainer");
+        const videoPlayer = document.getElementById("videoPlayer");
+        const closeButton = document.getElementById("closeButton");
+        function getEmbedUrl(url) {
+            const videoId = url.split('v=')[1];
+            return `https://www.youtube.com/embed/${videoId}?modestbranding=1&rel=0&playsinline=1&autoplay=1`;
+        }
         glbFiles.forEach((file, index) => {
             BABYLON.SceneLoader.ImportMesh("", "./", file, scene, function(meshes, particleSystems, skeletons, animationGroups) {
                 if (!meshes || meshes.length === 0) {
@@ -306,28 +419,60 @@
                 mesh.scaling = new BABYLON.Vector3(50, 50, 50);
                 const pivot = new BABYLON.TransformNode("pivot_" + index, scene);
                 mesh.position.z = radius;
+
+                // Modifiez la position du modèle "bluebot.glb" pour le rapprocher du centre.
                 if (file === "bluebot.glb") {
                     mesh.position.x = -230;
                     mesh.position.y = -190;
                 }
+
+
+ // Modifiez la position du modèle "labonumerique.glb" pour le rapprocher du centre.
                 if (file === "labonumerique.glb") {
                     mesh.position.x = 230;
                     mesh.position.y = -90;
                 }
+
+                
                 if (customAngles[index] !== undefined) {
                     pivot.rotation.y = customAngles[index];
                 }
                 mesh.parent = pivot;
-                
-                scene.onPointerObservable.add((pointerInfo) => {
-                    if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERDOWN && pointerInfo.pickInfo.hit && pointerInfo.pickInfo.pickedMesh === mesh) {
-                        window.open(urls[index], '_blank');
-                    }
+                const circle = createCircle(index + 1, circleLabels[index]);
+                circleMap.set(mesh, circle);
+                circle.addEventListener('click', () => {
+                    const embedUrl = getEmbedUrl(videoUrls[index]);
+                    videoPlayer.src = embedUrl;
+                    videoContainer.style.display = "block";
+                    camera.detachControl(canvas);
                 });
             });
         });
+        closeButton.addEventListener('click', () => {
+            videoPlayer.src = "";
+            videoContainer.style.display = "none";
+            camera.attachControl(canvas, true);
+        });
         engine.runRenderLoop(() => {
             scene.render();
+            circleMap.forEach((circle, mesh) => {
+                if (!mesh) return;
+                const worldCenter = mesh.getBoundingInfo().boundingSphere.centerWorld;
+                const pos = BABYLON.Vector3.Project(
+                    worldCenter,
+                    BABYLON.Matrix.IdentityReadOnly,
+                    scene.getTransformMatrix(),
+                    camera.viewport.toGlobal(engine.getRenderWidth(), engine.getRenderHeight())
+                );
+                if (pos.z >= 0 && pos.z <= 1) {
+                    circle.style.left = `${pos.x}px`;
+                    circle.style.top = `${pos.y}px`;
+                    circle.style.transform = "translate(-50%, -50%)";
+                    circle.style.visibility = "visible";
+                } else {
+                    circle.style.visibility = "hidden";
+                }
+            });
         });
         window.addEventListener("resize", () => engine.resize());
         const hamburgerButton = document.getElementById('hamburger-button');
@@ -377,6 +522,16 @@
                     );
                 });
             }
+            const linkButton = document.getElementById('linkButton');
+            if (linkButton) {
+                linkButton.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    document.body.classList.add('transition-out');
+                    setTimeout(() => {
+                        window.location.href = 'page2.html';
+                    }, 500);
+                });
+            }
         });
         function animateCameraSpin() {
             camera.alpha -= Math.PI * 0.75;
@@ -413,3 +568,5 @@
     </script>
 </body>
 </html>
+
+
