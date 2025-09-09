@@ -399,16 +399,13 @@
                 mesh.parent = pivot;
                 const circle = createCircle(index + 1, circleLabels[index]);
                 circleMap.set(mesh, circle);
-                // Ajout d'une action de clic pour ouvrir une nouvelle page
-                mesh.actionManager = new BABYLON.ActionManager(scene);
-                mesh.actionManager.registerAction(
-                    new BABYLON.ExecuteCodeAction(
-                        BABYLON.ActionManager.OnPickTrigger,
-                        function () {
-                            window.open(urls[index], '_blank');
-                        }
-                    )
-                );
+                
+                // Nouvelle approche pour le clic
+                scene.onPointerObservable.add((pointerInfo) => {
+                    if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERDOWN && pointerInfo.pickInfo.hit && pointerInfo.pickInfo.pickedMesh === mesh) {
+                        window.open(urls[index], '_blank');
+                    }
+                });
             });
         });
         engine.runRenderLoop(() => {
