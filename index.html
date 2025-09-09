@@ -66,10 +66,20 @@
             transform: translateX(-50%) scale(1.1);
         }
         @keyframes bounceIn {
-            0% { opacity: 0; transform: translate(-50%, -200%) scale(0.3); }
-            60% { opacity: 1; transform: translate(-50%, 20%) scale(1.05); }
-            80% { transform: translate(-50%, -10%) scale(0.95); }
-            100% { transform: translate(-50%, 0) scale(1); }
+            0% {
+                opacity: 0;
+                transform: translate(-50%, -200%) scale(0.3);
+            }
+            60% {
+                opacity: 1;
+                transform: translate(-50%, 20%) scale(1.05);
+            }
+            80% {
+                transform: translate(-50%, -10%) scale(0.95);
+            }
+            100% {
+                transform: translate(-50%, 0) scale(1);
+            }
         }
         #menu-container {
             position: fixed;
@@ -286,37 +296,27 @@
         const engine = new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true, alpha: true });
         const scene = new BABYLON.Scene(engine);
         scene.clearColor = new BABYLON.Color4(0, 0, 0, 0);
+
+        // 🎥 Caméra avec contrôles souris activés
         const camera = new BABYLON.ArcRotateCamera("cam", Math.PI/2, Math.PI/2.5, 300, new BABYLON.Vector3(0,0,0), scene);
         camera.attachControl(canvas, true);
-        camera.inputs.clear();
+
+        // ✅ Limites de rotation et zoom
+        camera.lowerBetaLimit = 0.1;
+        camera.upperBetaLimit = Math.PI / 2.2;
+        camera.lowerRadiusLimit = 150;
+        camera.upperRadiusLimit = 600;
+
         new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0,1,0), scene);
 
-        let panoLoaded = false;
-        function supportsWebP(callback) {
-            const img = new Image();
-            img.onload = () => callback(img.width > 0 && img.height > 0);
-            img.onerror = () => callback(false);
-            img.src = "data:image/webp;base64,UklGRiIAAABXRUJQVlA4TCEAAAAvAAAAAA...";
-        }
+        // Chargement du panorama
         function createPhotoDome(panoFile) {
             const dome = new BABYLON.PhotoDome("panorama", panoFile + "?v=" + Date.now(), { resolution: 32, size: 1000 }, scene);
             dome.imageMode = BABYLON.PhotoDome.MODE_MONOSCOPIC;
-            dome.onReady = () => {
-                panoLoaded = true;
-                checkAndStartPanoramaIntro();
-            };
         }
-        let lottieAnimationComplete = false;
-        function checkAndStartPanoramaIntro() {
-            if (panoLoaded && lottieAnimationComplete) {
-                canvas.classList.remove('hidden');
-                animateCameraSpin();
-            }
-        }
-        supportsWebP((isSupported) => {
-            const panoFile = isSupported ? "test7.webp" : "abstract1.png";
-            createPhotoDome(panoFile);
-        });
+        createPhotoDome("test7.webp");
+
+        // Création cercles
         const circleMap = new Map();
         function createCircle(id, text) {
             const container = document.createElement("div");
@@ -327,45 +327,45 @@
             return container;
         }
 
-        const glbFiles = ["IA.glb", "socleetoiletoque2.glb", "labonumerique.glb", "bluebot.glb"];
-        const htmlPages = ["page3.html", "page3.html", "page4.html", "page2.html"];
-        const customAngles = [0.5 * (Math.PI / 180), 302 * (Math.PI / 180), 112.5 * (Math.PI / 180), 214 * (Math.PI / 180)];
+        // GLB + redirection vers pages
+        const glbFiles = ["agenda2.glb", "socleetoiletoque2.glb", "labonumerique.glb", "bluebot.glb"];
+        const pageUrls = ["page2.html", "page3.html", "page4.html", "page2.html"];
+        const customAngles = [
+            0.5 * (Math.PI / 180),
+            302 * (Math.PI / 180),
+            112.5 * (Math.PI / 180),
+            214 * (Math.PI / 180)
+        ];
         const radius = 400;
         const circleLabels = ["Bienvenue", "Compte Sésame", "Intranet étudiant", "Réussir sa rentrée"];
 
         glbFiles.forEach((file, index) => {
             BABYLON.SceneLoader.ImportMesh("", "./", file, scene, function(meshes, particleSystems, skeletons, animationGroups) {
-                if (!meshes || meshes.length === 0) {
-                    console.warn(`Aucun mesh trouvé dans ${file}.`);
-                    return;
-                }
+                if (!meshes || meshes.length === 0) return;
                 const mesh = meshes[0];
                 if (animationGroups) animationGroups.forEach(ag => ag.start(true));
                 mesh.scaling = new BABYLON.Vector3(50, 50, 50);
                 const pivot = new BABYLON.TransformNode("pivot_" + index, scene);
                 mesh.position.z = radius;
 
-                if (file === "bluebot.glb") {
-                    mesh.position.x = -230; mesh.position.y = -190;
-                }
-                if (file === "labonumerique.glb") {
-                    mesh.position.x = 230; mesh.position.y = -90;
-                }
+                if (file === "bluebot.glb") { mesh.position.x = -230; mesh.position.y = -190; }
+                if (file === "labonumerique.glb") { mesh.position.x = 230; mesh.position.y = -90; }
 
-                if (customAngles[index] !== undefined) {
-                    pivot.rotation.y = customAngles[index];
-                }
+                if (customAngles[index] !== undefined) pivot.rotation.y = customAngles[index];
                 mesh.parent = pivot;
+
                 const circle = createCircle(index + 1, circleLabels[index]);
                 circleMap.set(mesh, circle);
-
-                // 🚀 Redirection vers les pages locales
                 circle.addEventListener('click', () => {
-                    window.location.href = htmlPages[index];
+                    document.body.classList.add('transition-out');
+                    setTimeout(() => {
+                        window.location.href = pageUrls[index];
+                    }, 500);
                 });
             });
         });
 
+        // Boucle de rendu
         engine.runRenderLoop(() => {
             scene.render();
             circleMap.forEach((circle, mesh) => {
@@ -389,6 +389,8 @@
         });
 
         window.addEventListener("resize", () => engine.resize());
+
+        // Menu hamburger
         const hamburgerButton = document.getElementById('hamburger-button');
         const menuOverlay = document.getElementById('menu-overlay');
         hamburgerButton.addEventListener('click', () => {
@@ -396,67 +398,41 @@
             menuOverlay.classList.toggle('open');
         });
 
+        // Texte animé
         const customText = document.getElementById("customText");
         customText.addEventListener("click", () => {
             customText.classList.toggle("zoomed");
         });
 
-        document.addEventListener("DOMContentLoaded", () => {
-            const lottieContainer = document.getElementById('lottie-container');
-            const anim = lottie.loadAnimation({
-                container: lottieContainer,
-                renderer: 'svg',
-                loop: false,
-                autoplay: true,
-                path: 'intro.json',
-                rendererSettings: { preserveAspectRatio: 'xMidYMid slice' }
+        // Bouton scroll caméra
+        const scrollButton = document.getElementById('scrollButton');
+        if (scrollButton) {
+            scrollButton.addEventListener('click', () => {
+                const rotationIncrement = 30 * (Math.PI / 180);
+                BABYLON.Animation.CreateAndStartAnimation(
+                    "scrollCam",
+                    camera,
+                    "alpha",
+                    60,
+                    60,
+                    camera.alpha,
+                    camera.alpha + rotationIncrement,
+                    BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT,
+                    new BABYLON.CubicEase()
+                );
             });
-            anim.addEventListener('complete', () => {
-                lottieAnimationComplete = true;
-                lottieContainer.classList.add('fade-out');
-                setTimeout(() => { lottieContainer.style.display = 'none'; }, 1000);
-                checkAndStartPanoramaIntro();
+        }
+
+        // Bouton "Go"
+        const linkButton = document.getElementById('linkButton');
+        if (linkButton) {
+            linkButton.addEventListener('click', (e) => {
+                e.preventDefault();
+                document.body.classList.add('transition-out');
+                setTimeout(() => {
+                    window.location.href = 'page2.html';
+                }, 500);
             });
-
-            const scrollButton = document.getElementById('scrollButton');
-            if (scrollButton) {
-                scrollButton.addEventListener('click', () => {
-                    const rotationIncrement = 30 * (Math.PI / 180);
-                    BABYLON.Animation.CreateAndStartAnimation(
-                        "scrollCam", camera, "alpha", 60, 60,
-                        camera.alpha, camera.alpha + rotationIncrement,
-                        BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT,
-                        new BABYLON.CubicEase()
-                    );
-                });
-            }
-
-            const linkButton = document.getElementById('linkButton');
-            if (linkButton) {
-                linkButton.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    document.body.classList.add('transition-out');
-                    setTimeout(() => { window.location.href = 'page2.html'; }, 500);
-                });
-            }
-        });
-
-        function animateCameraSpin() {
-            camera.alpha -= Math.PI * 0.75;
-            camera.beta = Math.PI / 2.5;
-            camera.radius = 300;
-            BABYLON.Animation.CreateAndStartAnimation(
-                "cameraSpin", camera, "alpha", 60, 120,
-                camera.alpha, camera.alpha + Math.PI * 0.75,
-                BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT,
-                new BABYLON.CubicEase()
-            );
-            BABYLON.Animation.CreateAndStartAnimation(
-                "cameraZoom", camera, "radius", 60, 120,
-                camera.radius * 1.3, camera.radius,
-                BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT,
-                new BABYLON.CubicEase()
-            );
         }
     </script>
 </body>
