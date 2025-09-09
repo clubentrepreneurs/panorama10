@@ -1,373 +1,373 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <link href="https://fonts.cdnfonts.com/css/apex-new" rel="stylesheet">
-  <title>Réussite Étudiante - Babylon.js</title>
-  <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      overflow: hidden;
-      font-family: 'Apex New', sans-serif;
-    }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <link href="https://fonts.cdnfonts.com/css/apex-new" rel="stylesheet">
+  <title>Réussite Étudiante - Babylon.js</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
+      font-family: 'Apex New', sans-serif;
+    }
 
-    #renderCanvas {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 0;
-    }
+    #renderCanvas {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+    }
 
-    .label {
-      position: absolute;
-      padding: 8px 14px;
-      color: white;
-      font-size: 24px;
-      font-family: 'Apex New', sans-serif;
-      font-weight: bold;
-      background: rgba(0, 0, 0, 0.4);
-      border-radius: 12px;
-      pointer-events: auto;
-      z-index: 5;
-      transform: translate(-50%, -50%);
-      display: none;
-      cursor: pointer;
-      text-shadow: 1px 1px 3px black;
-      transition: transform 0.3s ease, opacity 0.5s ease;
-      opacity: 0;
-    }
+    .label {
+      position: absolute;
+      padding: 8px 14px;
+      color: white;
+      font-size: 24px;
+      font-family: 'Apex New', sans-serif;
+      font-weight: bold;
+      background: rgba(0, 0, 0, 0.4);
+      border-radius: 12px;
+      pointer-events: auto;
+      z-index: 5;
+      transform: translate(-50%, -50%);
+      display: none;
+      cursor: pointer;
+      text-shadow: 1px 1px 3px black;
+      transition: transform 0.3s ease, opacity 0.5s ease;
+      opacity: 0;
+    }
 
-    .label:hover {
-      background: rgba(255, 255, 255, 0.2);
-      transform: translate(-50%, -55%) scale(1.05);
-    }
+    .label:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: translate(-50%, -55%) scale(1.05);
+    }
 
-    .label.show { display: block; opacity: 1; }
+    .label.show { display: block; opacity: 1; }
 
-    #label2, #label3, #label4, #label5 {
-      color: #ffffff;
-    }
+    #label2, #label3, #label4, #label5 {
+      color: #ffffff;
+    }
 
-    #videoContainer {
-      display: none;
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      width: 80%;
-      max-width: 800px;
-      height: 45%;
-      transform: translate(-50%, -50%);
-      background: rgba(0, 0, 0, 0.9);
-      border-radius: 12px;
-      box-shadow: 0 0 20px rgba(0,0,0,0.5);
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      z-index: 20;
-    }
+    #videoContainer {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      width: 80%;
+      max-width: 800px;
+      height: 45%;
+      transform: translate(-50%, -50%);
+      background: rgba(0, 0, 0, 0.9);
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.5);
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 20;
+    }
 
-    #videoContainer iframe {
-      width: 100%;
-      height: calc(100% - 40px);
-      border: none;
-      border-top-left-radius: 12px;
-      border-top-right-radius: 12px;
-    }
+    #videoContainer iframe {
+      width: 100%;
+      height: calc(100% - 40px);
+      border: none;
+      border-top-left-radius: 12px;
+      border-top-right-radius: 12px;
+    }
 
-    #backButton {
-      width: 100%;
-      height: 40px;
-      background: #ffffff;
-      color: #000000;
-      font-weight: bold;
-      font-size: 14px;
-      border: none;
-      cursor: pointer;
-      border-bottom-left-radius: 12px;
-      border-bottom-right-radius: 12px;
-    }
+    #backButton {
+      width: 100%;
+      height: 40px;
+      background: #ffffff;
+      color: #000000;
+      font-weight: bold;
+      font-size: 14px;
+      border: none;
+      cursor: pointer;
+      border-bottom-left-radius: 12px;
+      border-bottom-right-radius: 12px;
+    }
 
-    #backButton:hover { background: #e0e0e0; }
+    #backButton:hover { background: #e0e0e0; }
 
-    @font-face {
-      font-family: 'Apex New';
-      src: url('fonts/ApexNew-Bold.otf') format('opentype');
-      font-weight: normal;
-      font-style: normal;
-    }
+    @font-face {
+      font-family: 'Apex New';
+      src: url('fonts/ApexNew-Bold.otf') format('opentype');
+      font-weight: normal;
+      font-style: normal;
+    }
 
-    /* === Styles pour le menu Hamburger === */
-    #menu-container {
-        position: fixed;
-        top: 20px;
-        left: 20px;
-        z-index: 1001;
-    }
-    #hamburger-button {
-        width: 40px;
-        height: 35px;
-        cursor: pointer;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        background: none;
-        border: none;
-        padding: 0;
-    }
-    #hamburger-button .line {
-        width: 100%;
-        height: 6px;
-        background-color: #E5005B;
-        transition: all 0.3s ease-in-out;
-    }
-    
-    /* Styles pour la transformation en croix */
-    #hamburger-button.open .line:nth-child(1) {
-        transform: translateY(14px) rotate(45deg);
-    }
-    #hamburger-button.open .line:nth-child(2) {
-        opacity: 0;
-    }
-    #hamburger-button.open .line:nth-child(3) {
-        transform: translateY(-14px) rotate(-45deg);
-    }
+    /* === Styles pour le menu Hamburger === */
+    #menu-container {
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        z-index: 1001;
+    }
+    #hamburger-button {
+        width: 40px;
+        height: 35px;
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        background: none;
+        border: none;
+        padding: 0;
+    }
+    #hamburger-button .line {
+        width: 100%;
+        height: 6px;
+        background-color: #E5005B;
+        transition: all 0.3s ease-in-out;
+    }
+    
+    /* Styles pour la transformation en croix */
+    #hamburger-button.open .line:nth-child(1) {
+        transform: translateY(14px) rotate(45deg);
+    }
+    #hamburger-button.open .line:nth-child(2) {
+        opacity: 0;
+    }
+    #hamburger-button.open .line:nth-child(3) {
+        transform: translateY(-14px) rotate(-45deg);
+    }
 
-    /* Style pour le texte "MENU" */
-    #hamburger-label {
-        position: absolute;
-        top: 100%;
-        left: 50%;
-        transform: translateX(-50%);
-        margin-top: 5px;
-        font-family: 'Apex New', sans-serif;
-        font-weight: bold;
-        color: #E5005B;
-        font-size: 14px;
-        white-space: nowrap;
-    }
+    /* Style pour le texte "MENU" */
+    #hamburger-label {
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        margin-top: 5px;
+        font-family: 'Apex New', sans-serif;
+        font-weight: bold;
+        color: #E5005B;
+        font-size: 14px;
+        white-space: nowrap;
+    }
 
-    #menu-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 250px;
-        height: 100%;
-        background-color: rgba(255, 255, 255, 0.9);
-        z-index: 1000;
-        transform: translateX(-100%);
-        transition: transform 0.3s ease-in-out;
-        padding: 100px 20px 20px;
-        box-shadow: 2px 0 5px rgba(0,0,0,0.5);
-        font-family: 'Apex New', sans-serif;
-        box-sizing: border-box;
-        display: flex;
-        flex-direction: column;
-    }
-    #menu-overlay.open {
-        transform: translateX(0);
-    }
+    #menu-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 250px;
+        height: 100%;
+        background-color: rgba(255, 255, 255, 0.9);
+        z-index: 1000;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease-in-out;
+        padding: 100px 20px 20px;
+        box-shadow: 2px 0 5px rgba(0,0,0,0.5);
+        font-family: 'Apex New', sans-serif;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+    }
+    #menu-overlay.open {
+        transform: translateX(0);
+    }
 
-    /* NOUVEAUX STYLES POUR LE MENU */
-    #menu-overlay h2 {
-        font-size: 20px;
-        font-weight: bold;
-        color: #000;
-        border-bottom: 2px solid #00AFD7;
-        padding-bottom: 10px;
-        margin-bottom: 20px;
-        text-align: center;
-    }
-    #menu-overlay ul {
-        list-style: disc;
-        padding: 0 0 0 20px;
-        margin: 0;
-    }
-    #menu-overlay ul li {
-        margin-bottom: 15px;
-    }
-    #menu-overlay ul li a {
-        text-decoration: none;
-        color: black;
-        font-size: 16px;
-        font-weight: normal;
-        display: block;
-        padding: 5px 0;
-        transition: color 0.3s ease;
-    }
-    #menu-overlay ul li a:hover {
-        color: #00AFD7;
-        font-weight: bold;
-    }
-    /* FIN DES NOUVEAUX STYLES */
-  </style>
+    /* NOUVEAUX STYLES POUR LE MENU */
+    #menu-overlay h2 {
+        font-size: 20px;
+        font-weight: bold;
+        color: #000;
+        border-bottom: 2px solid #00AFD7;
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+        text-align: center;
+    }
+    #menu-overlay ul {
+        list-style: disc;
+        padding: 0 0 0 20px;
+        margin: 0;
+    }
+    #menu-overlay ul li {
+        margin-bottom: 15px;
+    }
+    #menu-overlay ul li a {
+        text-decoration: none;
+        color: black;
+        font-size: 16px;
+        font-weight: normal;
+        display: block;
+        padding: 5px 0;
+        transition: color 0.3s ease;
+    }
+    #menu-overlay ul li a:hover {
+        color: #00AFD7;
+        font-weight: bold;
+    }
+    /* FIN DES NOUVEAUX STYLES */
+  </style>
 </head>
 <body>
 
-  <canvas id="renderCanvas"></canvas>
+  <canvas id="renderCanvas"></canvas>
 
-  <div id="label" class="label">LES 4 INCONTOURNABLES</div>
-  <div id="label2" class="label">L'emploi du temps</div>
-  <div id="label3" class="label">Intranet</div>
-  <div id="label4" class="label">Le compte Sésame</div>
-  <div id="label5" class="label">Moodle</div>
+  <div id="label" class="label">LES 4 INCONTOURNABLES</div>
+  <div id="label2" class="label">L'emploi du temps</div>
+  <div id="label3" class="label">Intranet</div>
+  <div id="label4" class="label">Le compte Sésame</div>
+  <div id="label5" class="label">Moodle</div>
 
-  <div id="menu-container">
-    <button id="hamburger-button">
-      <span class="line"></span>
-      <span class="line"></span>
-      <span class="line"></span>
-    </button>
-    <span id="hamburger-label">MENU</span>
-  </div>
-  
-  <div id="menu-overlay">
-    <h2>Toutes vos ressources pour réussir à l'Université</h2>
-    <ul>
-      <li><a href="page2.html">Vidéos "Réussir votre rentrée 2025"</a></li>
-      <li><a href="https://www.youtube.com/watch?v=lUU1G-6klpI">Vidéo "Compte Sésame"</a></li>
-      <li><a href="https://www.youtube.com/watch?v=SWIDVGO3Gg0">Vidéo "Intranet étudiant"</a></li>
-    </ul>
-  </div>
+  <div id="menu-container">
+    <button id="hamburger-button">
+      <span class="line"></span>
+      <span class="line"></span>
+      <span class="line"></span>
+    </button>
+    <span id="hamburger-label">MENU</span>
+  </div>
+  
+  <div id="menu-overlay">
+    <h2>Toutes vos ressources pour réussir à l'Université</h2>
+    <ul>
+      <li><a href="page2.html">Vidéos "Réussir votre rentrée 2025"</a></li>
+      <li><a href="https://www.youtube.com/watch?v=lUU1G-6klpI">Vidéo "Compte Sésame"</a></li>
+      <li><a href="https://www.youtube.com/watch?v=SWIDVGO3Gg0">Vidéo "Intranet étudiant"</a></li>
+    </ul>
+  </div>
 
-  <div id="videoContainer">
-    <iframe id="videoFrame" allow="autoplay" allowfullscreen></iframe>
-    <button id="backButton">Retour à la scène 3D</button>
-  </div>
+  <div id="videoContainer">
+    <iframe id="videoFrame" allow="autoplay" allowfullscreen></iframe>
+    <button id="backButton">Retour à la scène 3D</button>
+  </div>
 
-  <script src="https://cdn.babylonjs.com/babylon.js"></script>
-  <script src="https://cdn.babylonjs.com/loaders/babylon.glTF2FileLoader.js"></script>
+  <script src="https://cdn.babylonjs.com/babylon.js"></script>
+  <script src="https://cdn.babylonjs.com/loaders/babylon.glTF2FileLoader.js"></script>
 
-  <script>
-    const canvas = document.getElementById("renderCanvas");
+  <script>
+    const canvas = document.getElementById("renderCanvas");
 
-    function initBabylon() {
-      const engine = new BABYLON.Engine(canvas, true);
-      const scene = new BABYLON.Scene(engine);
-      scene.clearColor = new BABYLON.Color4(0, 0, 0, 0);
+    function initBabylon() {
+      const engine = new BABYLON.Engine(canvas, true);
+      const scene = new BABYLON.Scene(engine);
+      scene.clearColor = new BABYLON.Color4(0, 0, 0, 0);
 
-      const panoFile = "backgroundstatiqueexportepourleweb4.png";
-      const dome = new BABYLON.PhotoDome("panorama", panoFile, { resolution: 32, size: 1000 }, scene);
-      dome.imageMode = BABYLON.PhotoDome.MODE_MONOSCOPIC;
-      const domeMat = dome.mesh.material;
-      domeMat.diffuseTexture.hasAlpha = false;
-      domeMat.useAlphaFromDiffuseTexture = false;
-      domeMat.transparencyMode = BABYLON.Material.MATERIAL_OPAQUE;
+      const panoFile = "backgroundstatiqueexportepourleweb4.png";
+      const dome = new BABYLON.PhotoDome("panorama", panoFile, { resolution: 32, size: 1000 }, scene);
+      dome.imageMode = BABYLON.PhotoDome.MODE_MONOSCOPIC;
+      const domeMat = dome.mesh.material;
+      domeMat.diffuseTexture.hasAlpha = false;
+      domeMat.useAlphaFromDiffuseTexture = false;
+      domeMat.transparencyMode = BABYLON.Material.MATERIAL_OPAQUE;
 
-      const isMobile = window.innerWidth < 768;
-      const alphaTarget = Math.PI / 2;
-      const betaTarget = isMobile ? Math.PI / 2.2 : Math.PI / 2.5;
-      const radiusTarget = 4;
+      const isMobile = window.innerWidth < 768;
+      const alphaTarget = Math.PI / 2;
+      const betaTarget = isMobile ? Math.PI / 2.2 : Math.PI / 2.5;
+      const radiusTarget = 4;
 
-      const camera = new BABYLON.ArcRotateCamera("camera",
-        alphaTarget + Math.PI,
-        betaTarget - 0.5,
-        radiusTarget * 2,
-        BABYLON.Vector3.Zero(),
-        scene);
-      camera.attachControl(canvas, true);
+      const camera = new BABYLON.ArcRotateCamera("camera",
+        alphaTarget + Math.PI,
+        betaTarget - 0.5,
+        radiusTarget * 2,
+        BABYLON.Vector3.Zero(),
+        scene);
+      camera.attachControl(canvas, true);
 
-      const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
-      light.intensity = 0.9;
+      const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
+      light.intensity = 0.9;
 
-      const modelsWithLabels = [];
+      const modelsWithLabels = [];
 
-      function loadModelWithLabel(filename, labelId, meshName = null) {
-        const label = document.getElementById(labelId);
-        BABYLON.SceneLoader.ImportMesh("", "", filename, scene, function (meshes) {
-          let targetMesh = meshName
-            ? meshes.find(m => m.name === meshName)
-            : meshes.reduce((largest, current) => {
-              const sizeCurrent = current.getBoundingInfo().boundingBox.extendSizeWorld.length();
-              const sizeLargest = largest.getBoundingInfo().boundingBox.extendSizeWorld.length();
-              return sizeCurrent > sizeLargest ? current : largest;
-            }, meshes[0]);
-          modelsWithLabels.push({ mesh: targetMesh, label });
-        });
-      }
+      function loadModelWithLabel(filename, labelId, meshName = null) {
+        const label = document.getElementById(labelId);
+        BABYLON.SceneLoader.ImportMesh("", "", filename, scene, function (meshes) {
+          let targetMesh = meshName
+            ? meshes.find(m => m.name === meshName)
+            : meshes.reduce((largest, current) => {
+              const sizeCurrent = current.getBoundingInfo().boundingBox.extendSizeWorld.length();
+              const sizeLargest = largest.getBoundingInfo().boundingBox.extendSizeWorld.length();
+              return sizeCurrent > sizeLargest ? current : largest;
+            }, meshes[0]);
+          modelsWithLabels.push({ mesh: targetMesh, label });
+        });
+      }
 
-      loadModelWithLabel("socleetoiletoque.glb", "label");
-      loadModelWithLabel("agenda.glb", "label2");
-      loadModelWithLabel("computer.glb", "label3");
-      loadModelWithLabel("coffre.glb", "label4");
-      loadModelWithLabel("livres.glb", "label5");
+      loadModelWithLabel("socleetoiletoque.glb", "label");
+      loadModelWithLabel("agenda.glb", "label2");
+      loadModelWithLabel("computer.glb", "label3");
+      loadModelWithLabel("coffre.glb", "label4");
+      loadModelWithLabel("livres.glb", "label5");
 
-      scene.executeWhenReady(() => {
-        const animAlpha = new BABYLON.Animation("alphaAnim", "alpha", 60,
-          BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT);
-        const animBeta = new BABYLON.Animation("betaAnim", "beta", 60,
-          BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT);
-        const animRadius = new BABYLON.Animation("radiusAnim", "radius", 60,
-          BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT);
+      scene.executeWhenReady(() => {
+        const animAlpha = new BABYLON.Animation("alphaAnim", "alpha", 60,
+          BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT);
+        const animBeta = new BABYLON.Animation("betaAnim", "beta", 60,
+          BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT);
+        const animRadius = new BABYLON.Animation("radiusAnim", "radius", 60,
+          BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT);
 
-        animAlpha.setKeys([{ frame: 0, value: camera.alpha }, { frame: 120, value: alphaTarget }]);
-        animBeta.setKeys([{ frame: 0, value: camera.beta }, { frame: 120, value: betaTarget }]);
-        animRadius.setKeys([{ frame: 0, value: camera.radius }, { frame: 120, value: radiusTarget }]);
+        animAlpha.setKeys([{ frame: 0, value: camera.alpha }, { frame: 120, value: alphaTarget }]);
+        animBeta.setKeys([{ frame: 0, value: camera.beta }, { frame: 120, value: betaTarget }]);
+        animRadius.setKeys([{ frame: 0, value: camera.radius }, { frame: 120, value: radiusTarget }]);
 
-        camera.animations.push(animAlpha, animBeta, animRadius);
-        scene.beginAnimation(camera, 0, 120, false);
-      });
+        camera.animations.push(animAlpha, animBeta, animRadius);
+        scene.beginAnimation(camera, 0, 120, false);
+      });
 
-      scene.registerAfterRender(() => {
-        for (const { mesh, label } of modelsWithLabels) {
-          if (!mesh) continue;
-          const center = mesh.getBoundingInfo().boundingSphere.centerWorld;
-          const proj = BABYLON.Vector3.Project(center, BABYLON.Matrix.Identity(), scene.getTransformMatrix(),
-            camera.viewport.toGlobal(engine.getRenderWidth(), engine.getRenderHeight()));
-          if (proj.z >= 0 && proj.z <= 1) {
-            label.style.left = `${proj.x}px`;
-            label.style.top = `${proj.y + 100}px`; // Décalage vertical vers le bas
-            label.classList.add("show");
-          } else {
-            label.classList.remove("show");
-          }
-        }
-      });
+      scene.registerAfterRender(() => {
+        for (const { mesh, label } of modelsWithLabels) {
+          if (!mesh) continue;
+          const center = mesh.getBoundingInfo().boundingSphere.centerWorld;
+          const proj = BABYLON.Vector3.Project(center, BABYLON.Matrix.Identity(), scene.getTransformMatrix(),
+            camera.viewport.toGlobal(engine.getRenderWidth(), engine.getRenderHeight()));
+          if (proj.z >= 0 && proj.z <= 1) {
+            label.style.left = `${proj.x}px`;
+            label.style.top = `${proj.y + 100}px`; // Décalage vertical vers le bas
+            label.classList.add("show");
+          } else {
+            label.classList.remove("show");
+          }
+        }
+      });
 
-      const videoContainer = document.getElementById("videoContainer");
-      const videoFrame = document.getElementById("videoFrame");
+      const videoContainer = document.getElementById("videoContainer");
+      const videoFrame = document.getElementById("videoFrame");
 
-      const labelLinks = {
-        label: "https://www.youtube.com/embed/Jgcb7hjdgaU?autoplay=1",
-        label2: "https://www.youtube.com/embed/T6CI_hIbJIA?autoplay=1",
-        label3: "https://www.youtube.com/embed/SWIDVGO3Gg0?autoplay=1",
-        label4: "https://www.youtube.com/embed/lUU1G-6klpI?autoplay=1",
-        label5: "https://www.youtube.com/embed/KDd3JMkRvbI?autoplay=1"
-      };
+      const labelLinks = {
+        label: "https://www.youtube.com/embed/Jgcb7hjdgaU?autoplay=1", // socleetoiletoque.glb
+        label2: "https://www.youtube.com/embed/T6CI_hIbJIA?autoplay=1", // agenda.glb
+        label3: "https://www.youtube.com/embed/SWIDVGO3Gg0?autoplay=1", // computer.glb
+        label4: "https://www.youtube.com/embed/lUU1G-6klpI?autoplay=1", // coffre.glb
+        label5: "https://www.youtube.com/embed/KDd3JMkRvbI?autoplay=1"  // livres.glb
+      };
 
-      for (const [labelId, url] of Object.entries(labelLinks)) {
-        document.getElementById(labelId).addEventListener("click", () => {
-          videoFrame.src = url;
-          videoContainer.style.display = "flex";
-        });
-      }
+      for (const [labelId, url] of Object.entries(labelLinks)) {
+        document.getElementById(labelId).addEventListener("click", () => {
+          videoFrame.src = url;
+          videoContainer.style.display = "flex";
+        });
+      }
 
-      document.getElementById("backButton").addEventListener("click", () => {
-        videoFrame.src = "";
-        videoContainer.style.display = "none";
-      });
+      document.getElementById("backButton").addEventListener("click", () => {
+        videoFrame.src = "";
+        videoContainer.style.display = "none";
+      });
 
-      window.addEventListener("resize", () => engine.resize());
-      engine.runRenderLoop(() => scene.render());
-    }
+      window.addEventListener("resize", () => engine.resize());
+      engine.runRenderLoop(() => scene.render());
+    }
 
-    // Ajout de la logique pour le menu hamburger
-    document.addEventListener("DOMContentLoaded", () => {
-        const hamburgerButton = document.getElementById('hamburger-button');
-        const menuOverlay = document.getElementById('menu-overlay');
+    // Ajout de la logique pour le menu hamburger
+    document.addEventListener("DOMContentLoaded", () => {
+        const hamburgerButton = document.getElementById('hamburger-button');
+        const menuOverlay = document.getElementById('menu-overlay');
 
-        if (hamburgerButton && menuOverlay) {
-            hamburgerButton.addEventListener('click', () => {
-                hamburgerButton.classList.toggle('open');
-                menuOverlay.classList.toggle('open');
-            });
-        }
-    });
+        if (hamburgerButton && menuOverlay) {
+            hamburgerButton.addEventListener('click', () => {
+                hamburgerButton.classList.toggle('open');
+                menuOverlay.classList.toggle('open');
+            });
+        }
+    });
 
-    initBabylon();
-  </script>
+    initBabylon();
+  </script>
 </body>
 </html>
