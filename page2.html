@@ -125,7 +125,6 @@
         transition: all 0.3s ease-in-out;
     }
     
-    /* Styles pour la transformation en croix */
     #hamburger-button.open .line:nth-child(1) {
         transform: translateY(14px) rotate(45deg);
     }
@@ -136,7 +135,6 @@
         transform: translateY(-14px) rotate(-45deg);
     }
 
-    /* Style pour le texte "MENU" */
     #hamburger-label {
         position: absolute;
         top: 100%;
@@ -171,7 +169,6 @@
         transform: translateX(0);
     }
 
-    /* NOUVEAUX STYLES POUR LE MENU */
     #menu-overlay h2 {
         font-size: 20px;
         font-weight: bold;
@@ -202,7 +199,6 @@
         color: #00AFD7;
         font-weight: bold;
     }
-    /* FIN DES NOUVEAUX STYLES */
   </style>
 </head>
 <body>
@@ -252,10 +248,6 @@
       const panoFile = "backgroundstatiqueexportepourleweb4.png";
       const dome = new BABYLON.PhotoDome("panorama", panoFile, { resolution: 32, size: 1000 }, scene);
       dome.imageMode = BABYLON.PhotoDome.MODE_MONOSCOPIC;
-      const domeMat = dome.mesh.material;
-      domeMat.diffuseTexture.hasAlpha = false;
-      domeMat.useAlphaFromDiffuseTexture = false;
-      domeMat.transparencyMode = BABYLON.Material.MATERIAL_OPAQUE;
 
       const isMobile = window.innerWidth < 768;
       const alphaTarget = Math.PI / 2;
@@ -295,22 +287,6 @@
       loadModelWithLabel("coffre.glb", "label4");
       loadModelWithLabel("livres.glb", "label5");
 
-      scene.executeWhenReady(() => {
-        const animAlpha = new BABYLON.Animation("alphaAnim", "alpha", 60,
-          BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT);
-        const animBeta = new BABYLON.Animation("betaAnim", "beta", 60,
-          BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT);
-        const animRadius = new BABYLON.Animation("radiusAnim", "radius", 60,
-          BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT);
-
-        animAlpha.setKeys([{ frame: 0, value: camera.alpha }, { frame: 120, value: alphaTarget }]);
-        animBeta.setKeys([{ frame: 0, value: camera.beta }, { frame: 120, value: betaTarget }]);
-        animRadius.setKeys([{ frame: 0, value: camera.radius }, { frame: 120, value: radiusTarget }]);
-
-        camera.animations.push(animAlpha, animBeta, animRadius);
-        scene.beginAnimation(camera, 0, 120, false);
-      });
-
       scene.registerAfterRender(() => {
         for (const { mesh, label } of modelsWithLabels) {
           if (!mesh) continue;
@@ -319,7 +295,7 @@
             camera.viewport.toGlobal(engine.getRenderWidth(), engine.getRenderHeight()));
           if (proj.z >= 0 && proj.z <= 1) {
             label.style.left = `${proj.x}px`;
-            label.style.top = `${proj.y + 100}px`; // Décalage vertical vers le bas
+            label.style.top = `${proj.y + 100}px`;
             label.classList.add("show");
           } else {
             label.classList.remove("show");
@@ -331,11 +307,11 @@
       const videoFrame = document.getElementById("videoFrame");
 
       const labelLinks = {
-        label: "https://www.youtube.com/embed/Jgcb7hjdgaU?autoplay=1", // socleetoiletoque.glb
-        label2: "https://www.youtube.com/embed/T6CI_hIbJIA?autoplay=1", // agenda.glb
-        label3: "https://www.youtube.com/embed/SWIDVGO3Gg0?autoplay=1", // computer.glb
-        label4: "https://www.youtube.com/embed/lUU1G-6klpI?autoplay=1", // coffre.glb
-        label5: "https://www.youtube.com/embed/KDd3JMkRvbI?autoplay=1"  // livres.glb
+        label: "https://www.youtube.com/embed/Jgcb7hjdgaU?autoplay=1",
+        label2: "https://www.youtube.com/embed/T6CI_hIbJIA?autoplay=1",
+        label3: "https://www.youtube.com/embed/SWIDVGO3Gg0?autoplay=1",
+        label4: "https://www.youtube.com/embed/lUU1G-6klpI?autoplay=1",
+        label5: "https://www.youtube.com/embed/KDd3JMkRvbI?autoplay=1"
       };
 
       for (const [labelId, url] of Object.entries(labelLinks)) {
@@ -345,16 +321,24 @@
         });
       }
 
-      document.getElementById("backButton").addEventListener("click", () => {
+      function closeVideo() {
         videoFrame.src = "";
         videoContainer.style.display = "none";
+      }
+
+      document.getElementById("backButton").addEventListener("click", closeVideo);
+
+      // 🔑 Fermeture avec la touche Échap
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+          closeVideo();
+        }
       });
 
       window.addEventListener("resize", () => engine.resize());
       engine.runRenderLoop(() => scene.render());
     }
 
-    // Ajout de la logique pour le menu hamburger
     document.addEventListener("DOMContentLoaded", () => {
         const hamburgerButton = document.getElementById('hamburger-button');
         const menuOverlay = document.getElementById('menu-overlay');
