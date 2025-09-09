@@ -232,6 +232,31 @@
             pointer-events: none;
             margin-top: 5px;
         }
+        #videoContainer {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%; max-width: 800px;
+            aspect-ratio: 16/9;
+            display: none;
+            z-index: 100;
+            background: black;
+        }
+        #videoContainer iframe {
+            width: 100%; height: 100%;
+            border: none;
+        }
+        #closeButton {
+            position: absolute;
+            top: -40px; right: 0;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 16px;
+            z-index: 101;
+        }
         .actionButton {
             position: fixed;
             bottom: 20px;
@@ -266,7 +291,9 @@
 <body>
     <div id="lottie-container"></div>
     <canvas id="renderCanvas" class="hidden"></canvas>
-    <div id="customText"><br></div>
+    <div id="customText">
+        <br>
+    </div>
     
     <div id="menu-container">
         <button id="hamburger-button">
@@ -285,10 +312,15 @@
             <li><a href="page4.html">Le laboratoire numérique des compétences : boostez votre réussite !"</a></li>
         </ul>
     </div>
-
-    <button id="scrollButton" class="actionButton">&#x21bb;</button>
-    <button id="linkButton" class="actionButton">Go</button>
-
+    <div id="videoContainer">
+        <button id="closeButton">Fermer</button>
+        <iframe id="videoPlayer" allowfullscreen allow="autoplay; encrypted-media"></iframe>
+    </div>
+    <button id="scrollButton" class="actionButton">
+        &#x21bb; </button>
+    <button id="linkButton" class="actionButton">
+        Go
+    </button>
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
     <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
     <script>
@@ -296,27 +328,48 @@
         const engine = new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true, alpha: true });
         const scene = new BABYLON.Scene(engine);
         scene.clearColor = new BABYLON.Color4(0, 0, 0, 0);
-
-        // 🎥 Caméra avec contrôles souris activés
         const camera = new BABYLON.ArcRotateCamera("cam", Math.PI/2, Math.PI/2.5, 300, new BABYLON.Vector3(0,0,0), scene);
         camera.attachControl(canvas, true);
-
-        // ✅ Limites de rotation et zoom
-        camera.lowerBetaLimit = 0.1;
-        camera.upperBetaLimit = Math.PI / 2.2;
-        camera.lowerRadiusLimit = 150;
-        camera.upperRadiusLimit = 600;
-
+        camera.inputs.clear();
         new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0,1,0), scene);
-
-        // Chargement du panorama
+        let panoLoaded = false;
+        function supportsWebP(callback) {
+            const img = new Image();
+            img.onload = () => callback(img.width > 0 && img.height > 0);
+            img.onerror = () => callback(false);
+            img.src = "data:image/webp;base64,UklGRiIAAABXRUJQVlA4TCEAAAAvAAAAAA...";
+        }
         function createPhotoDome(panoFile) {
             const dome = new BABYLON.PhotoDome("panorama", panoFile + "?v=" + Date.now(), { resolution: 32, size: 1000 }, scene);
             dome.imageMode = BABYLON.PhotoDome.MODE_MONOSCOPIC;
+            dome.onReady = () => {
+                panoLoaded = true;
+                checkAndStartPanoramaIntro();
+            };
+            const domeMat = dome.mesh.material;
+            if (panoFile.endsWith(".jpg") || panoFile.endsWith(".jpeg")) {
+                domeMat.diffuseTexture.hasAlpha = false;
+                domeMat.useAlphaFromDiffuseTexture = false;
+                domeMat.transparencyMode = BABYLON.Material.MATERIAL_OPAQUE;
+            } else {
+                domeMat.diffuseTexture.hasAlpha = true;
+                domeMat.useAlphaFromDiffuseTexture = true;
+                domeMat.transparencyMode = BABYLON.Material.MATERIAL_ALPHABLEND;
+                domeMat.backFaceCulling = false;
+                domeMat.needDepthPrePass = true;
+            }
         }
-        createPhotoDome("test7.webp");
-
-        // Création cercles
+        let lottieAnimationComplete = false;
+        function checkAndStartPanoramaIntro() {
+            if (panoLoaded && lottieAnimationComplete) {
+                canvas.classList.remove('hidden');
+                animateCameraSpin();
+            }
+        }
+        supportsWebP((isSupported) => {
+            const panoFile = isSupported ? "test7.webp" : "abstract1.png";
+            createPhotoDome(panoFile);
+        });
         const circleMap = new Map();
         function createCircle(id, text) {
             const container = document.createElement("div");
@@ -326,10 +379,13 @@
             document.body.appendChild(container);
             return container;
         }
-
-        // GLB + redirection vers pages
-        const glbFiles = ["agenda2.glb", "socleetoiletoque2.glb", "labonumerique.glb", "bluebot.glb"];
-        const pageUrls = ["page2.html", "page3.html", "page4.html", "page2.html"];
+        const glbFiles = ["IA.glb", "socleetoiletoque2.glb", "labonumerique.glb", "bluebot.glb"];
+        const videoUrls = [
+            "https://www.youtube.com/watch?v=lUU1G-6klpI",
+            "https://www.youtube.com/watch?v=SWIDVGO3Gg0",
+            "https://clubentrepreneurs.github.io/panorama10/page3.html",
+            "https://clubentrepreneurs.github.io/panorama10/page2.html"
+        ];
         const customAngles = [
             0.5 * (Math.PI / 180),
             302 * (Math.PI / 180),
@@ -337,35 +393,66 @@
             214 * (Math.PI / 180)
         ];
         const radius = 400;
-        const circleLabels = ["Bienvenue", "Compte Sésame", "Intranet étudiant", "Réussir sa rentrée"];
-
+        const circleLabels = [
+            "Bienvenue",
+            "Compte Sésame",
+            "Intranet étudiant",
+            "Réussir sa rentrée"
+        ];
+        const videoContainer = document.getElementById("videoContainer");
+        const videoPlayer = document.getElementById("videoPlayer");
+        const closeButton = document.getElementById("closeButton");
+        function getEmbedUrl(url) {
+            const videoId = url.split('v=')[1];
+            return `https://www.youtube.com/embed/${videoId}?modestbranding=1&rel=0&playsinline=1&autoplay=1`;
+        }
         glbFiles.forEach((file, index) => {
             BABYLON.SceneLoader.ImportMesh("", "./", file, scene, function(meshes, particleSystems, skeletons, animationGroups) {
-                if (!meshes || meshes.length === 0) return;
+                if (!meshes || meshes.length === 0) {
+                    console.warn(`Aucun mesh trouvé dans ${file}.`);
+                    return;
+                }
                 const mesh = meshes[0];
-                if (animationGroups) animationGroups.forEach(ag => ag.start(true));
+                if (animationGroups) {
+                    animationGroups.forEach(ag => ag.start(true));
+                }
                 mesh.scaling = new BABYLON.Vector3(50, 50, 50);
                 const pivot = new BABYLON.TransformNode("pivot_" + index, scene);
                 mesh.position.z = radius;
 
-                if (file === "bluebot.glb") { mesh.position.x = -230; mesh.position.y = -190; }
-                if (file === "labonumerique.glb") { mesh.position.x = 230; mesh.position.y = -90; }
+                // Modifiez la position du modèle "bluebot.glb" pour le rapprocher du centre.
+                if (file === "bluebot.glb") {
+                    mesh.position.x = -230;
+                    mesh.position.y = -190;
+                }
 
-                if (customAngles[index] !== undefined) pivot.rotation.y = customAngles[index];
+
+ // Modifiez la position du modèle "labonumerique.glb" pour le rapprocher du centre.
+                if (file === "labonumerique.glb") {
+                    mesh.position.x = 230;
+                    mesh.position.y = -90;
+                }
+
+                
+                if (customAngles[index] !== undefined) {
+                    pivot.rotation.y = customAngles[index];
+                }
                 mesh.parent = pivot;
-
                 const circle = createCircle(index + 1, circleLabels[index]);
                 circleMap.set(mesh, circle);
                 circle.addEventListener('click', () => {
-                    document.body.classList.add('transition-out');
-                    setTimeout(() => {
-                        window.location.href = pageUrls[index];
-                    }, 500);
+                    const embedUrl = getEmbedUrl(videoUrls[index]);
+                    videoPlayer.src = embedUrl;
+                    videoContainer.style.display = "block";
+                    camera.detachControl(canvas);
                 });
             });
         });
-
-        // Boucle de rendu
+        closeButton.addEventListener('click', () => {
+            videoPlayer.src = "";
+            videoContainer.style.display = "none";
+            camera.attachControl(canvas, true);
+        });
         engine.runRenderLoop(() => {
             scene.render();
             circleMap.forEach((circle, mesh) => {
@@ -387,52 +474,96 @@
                 }
             });
         });
-
         window.addEventListener("resize", () => engine.resize());
-
-        // Menu hamburger
         const hamburgerButton = document.getElementById('hamburger-button');
         const menuOverlay = document.getElementById('menu-overlay');
         hamburgerButton.addEventListener('click', () => {
             hamburgerButton.classList.toggle('open');
             menuOverlay.classList.toggle('open');
         });
-
-        // Texte animé
         const customText = document.getElementById("customText");
         customText.addEventListener("click", () => {
             customText.classList.toggle("zoomed");
         });
-
-        // Bouton scroll caméra
-        const scrollButton = document.getElementById('scrollButton');
-        if (scrollButton) {
-            scrollButton.addEventListener('click', () => {
-                const rotationIncrement = 30 * (Math.PI / 180);
-                BABYLON.Animation.CreateAndStartAnimation(
-                    "scrollCam",
-                    camera,
-                    "alpha",
-                    60,
-                    60,
-                    camera.alpha,
-                    camera.alpha + rotationIncrement,
-                    BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT,
-                    new BABYLON.CubicEase()
-                );
+        document.addEventListener("DOMContentLoaded", () => {
+            const lottieContainer = document.getElementById('lottie-container');
+            const anim = lottie.loadAnimation({
+                container: lottieContainer,
+                renderer: 'svg',
+                loop: false,
+                autoplay: true,
+                path: 'intro.json',
+                rendererSettings: {
+                    preserveAspectRatio: 'xMidYMid slice'
+                }
             });
-        }
-
-        // Bouton "Go"
-        const linkButton = document.getElementById('linkButton');
-        if (linkButton) {
-            linkButton.addEventListener('click', (e) => {
-                e.preventDefault();
-                document.body.classList.add('transition-out');
+            anim.addEventListener('complete', () => {
+                lottieAnimationComplete = true;
+                lottieContainer.classList.add('fade-out');
                 setTimeout(() => {
-                    window.location.href = 'page2.html';
-                }, 500);
+                    lottieContainer.style.display = 'none';
+                }, 1000);
+                checkAndStartPanoramaIntro();
             });
+            const scrollButton = document.getElementById('scrollButton');
+            if (scrollButton) {
+                scrollButton.addEventListener('click', () => {
+                    const rotationIncrement = 30 * (Math.PI / 180);
+                    BABYLON.Animation.CreateAndStartAnimation(
+                        "scrollCam",
+                        camera,
+                        "alpha",
+                        60,
+                        60,
+                        camera.alpha,
+                        camera.alpha + rotationIncrement,
+                        BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT,
+                        new BABYLON.CubicEase()
+                    );
+                });
+            }
+            const linkButton = document.getElementById('linkButton');
+            if (linkButton) {
+                linkButton.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    document.body.classList.add('transition-out');
+                    setTimeout(() => {
+                        window.location.href = 'page2.html';
+                    }, 500);
+                });
+            }
+        });
+        function animateCameraSpin() {
+            camera.alpha -= Math.PI * 0.75;
+            camera.beta = Math.PI / 2.5;
+            camera.radius = 300;
+            BABYLON.Animation.CreateAndStartAnimation(
+                "cameraSpin",
+                camera,
+                "alpha",
+                60,
+                120,
+                camera.alpha,
+                camera.alpha + Math.PI * 0.75,
+                BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT,
+                new BABYLON.CubicEase()
+            );
+            BABYLON.Animation.CreateAndStartAnimation(
+                "cameraZoom",
+                camera,
+                "radius",
+                60,
+                120,
+                camera.radius * 1.2,
+                camera.radius,
+                BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT,
+                new BABYLON.CubicEase()
+            );
+            setTimeout(() => {
+                camera.attachControl(canvas, true);
+                camera.inputs.add(new BABYLON.ArcRotateCameraPointersInput());
+                camera.inputs.add(new BABYLON.ArcRotateCameraKeyboardInput());
+            }, 2000);
         }
     </script>
 </body>
