@@ -334,16 +334,18 @@
                 if (animationGroups) {
                     animationGroups.forEach(ag => ag.start(true));
                 }
+                
+                // Échelle de base pour tous les modèles
                 mesh.scaling = new BABYLON.Vector3(50, 50, 50);
 
                 // --- DÉBUT DE LA ZONE DE MODIFICATION POUR LA TAILLE DE LABONUMERIQUE.GLB ---
                 if (file === "labonumerique.glb") {
                     // Multipliez l'échelle existante par un facteur pour l'agrandir.
-                    // Par exemple, 1.2 pour l'agrandir de 20%, 1.5 pour 50%, 2 pour doubler la taille.
-                    const scaleFactor = 1.3; // <<< Ajustez cette valeur pour la taille souhaitée
-                    mesh.scaling.x *2= scaleFactor;
-                    mesh.scaling.y *2= scaleFactor;
-                    mesh.scaling.z *2= scaleFactor;
+                    // Par exemple, 1.3 pour l'agrandir de 30% par rapport à sa taille de base (50,50,50).
+                    const scaleFactor = 1.3; // <<< Ajustez cette valeur pour la taille souhaitée (ex: 1.1, 1.5, 2.0)
+                    mesh.scaling.x *= scaleFactor;
+                    mesh.scaling.y *= scaleFactor;
+                    mesh.scaling.z *= scaleFactor;
                 }
                 // --- FIN DE LA ZONE DE MODIFICATION ---
 
@@ -365,7 +367,9 @@
                 } else if (file === "IA.glb") {
                     mesh.position.y = -90; 
                 } else if (file === "labonumerique.glb") {
-                    mesh.position.y = -40; 
+                    // Si le modèle est agrandi, son point le plus bas pourrait descendre.
+                    // Ajustez mesh.position.y ici si besoin pour le remonter ou l'ajuster.
+                    mesh.position.y = -40; // Valeur de base, ajustez si besoin après le scaling (ex: -30 ou -20)
                 }
 
                 // Création de l'overlay text pour chaque GLB
