@@ -336,6 +336,17 @@
                 }
                 mesh.scaling = new BABYLON.Vector3(50, 50, 50);
 
+                // --- DÉBUT DE LA ZONE DE MODIFICATION POUR LA TAILLE DE LABONUMERIQUE.GLB ---
+                if (file === "labonumerique.glb") {
+                    // Multipliez l'échelle existante par un facteur pour l'agrandir.
+                    // Par exemple, 1.2 pour l'agrandir de 20%, 1.5 pour 50%, 2 pour doubler la taille.
+                    const scaleFactor = 1.3; // <<< Ajustez cette valeur pour la taille souhaitée
+                    mesh.scaling.x *2= scaleFactor;
+                    mesh.scaling.y *2= scaleFactor;
+                    mesh.scaling.z *2= scaleFactor;
+                }
+                // --- FIN DE LA ZONE DE MODIFICATION ---
+
                 // Créez un TransformNode comme pivot pour chaque GLB
                 const pivot = new BABYLON.TransformNode("pivot_" + index, scene);
                 
