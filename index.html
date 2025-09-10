@@ -88,8 +88,10 @@
             z-index: 1001;
         }
         #hamburger-button {
-            width: 40px;
-            height: 35px;
+            /* --- DÉBUT DE LA ZONE DE MODIFICATION POUR LA TAILLE DU BOUTON --- */
+            width: 60px; /* Augmenté de 40px à 60px (40 * 1.5) */
+            height: 35px; /* On garde la hauteur pour la bonne proportion des traits */
+            /* --- FIN DE LA ZONE DE MODIFICATION --- */
             cursor: pointer;
             display: flex;
             flex-direction: column;
@@ -99,7 +101,8 @@
             padding: 0;
         }
         #hamburger-button .line {
-            width: 100%;
+            /* --- DÉBUT DE LA ZONE DE MODIFICATION POUR LA LONGUEUR DES TRAITS --- */
+            width: 100%; /* S'adapte à la largeur du bouton */
             height: 6px;
             background-color: #E5005B;
             transition: all 0.3s ease-in-out;
@@ -122,7 +125,9 @@
             font-family: 'Apex New', sans-serif;
             font-weight: bold;
             color: #E5005B;
-            font-size: 14px;
+            /* --- DÉBUT DE LA ZONE DE MODIFICATION POUR LA TAILLE DU TEXTE "MENU" --- */
+            font-size: 21px; /* Augmenté de 14px à 21px (14 * 1.5) */
+            /* --- FIN DE LA ZONE DE MODIFICATION --- */
             white-space: nowrap;
         }
         #menu-overlay {
@@ -348,7 +353,7 @@
 
                     // Descendre le modèle un peu plus bas verticalement.
                     // Une valeur plus négative fait descendre le modèle. Ajustez si besoin.
-                    mesh.position.y = -100; // <<< Valeur ajustée pour le descendre
+                    mesh.position.y = -120; // <<< Valeur ajustée pour le descendre
                 }
                 // --- FIN DE LA ZONE DE MODIFICATION ---
 
