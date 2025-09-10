@@ -197,7 +197,8 @@
             border: 2px solid red;
             animation: pulse 2s infinite ease-in-out;
         }
-        .circle::after {
+        /* Suppression du pseudo-élément ::after pour le deuxième cercle */
+        /* .circle::after {
             content: "";
             position: absolute;
             width: 130%;
@@ -207,7 +208,7 @@
             transform: scale(0);
             animation: growFade 2s infinite ease-out;
             animation-delay: 0.5s;
-        }
+        } */
         @keyframes pulse {
             0% { opacity: 1; }
             50% { opacity: 0.5; }
