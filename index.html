@@ -467,22 +467,23 @@
         });
 
         function animateCameraSpin() {
-            // --- DÉBUT DE LA ZONE DE MODIFICATION POUR LE DÉCALAGE GAUCHE ---
-            // Ce facteur de décalage va faire "tourner" la caméra un peu plus vers la droite
-            // ce qui aura pour effet de faire apparaître les GLB plus à gauche dans le champ de vision.
-            // Ajustez cette valeur pour contrôler l'ampleur du décalage.
-            // Math.PI / 8 équivaut à 22.5 degrés.
-            // Pour moins de décalage : diminuez la valeur (ex: Math.PI / 16)
-            // Pour plus de décalage : augmentez la valeur (ex: Math.PI / 4)
-            // Pour un décalage vers la DROITE : utilisez une valeur négative (ex: -Math.PI / 8)
-            const initialCameraAlphaOffset = Math.PI / 8; // <-- MODIFIEZ CETTE VALEUR POUR LE DÉCALAGE
+            // --- DÉBUT DE LA ZONE DE MODIFICATION POUR LE DÉCALAGE DROITE ---
+            // Ce facteur de décalage va faire "tourner" la caméra un peu plus vers la gauche
+            // ce qui aura pour effet de faire apparaître les GLB plus à droite dans le champ de vision.
+            // Pour décaler les GLB vers la DROITE, nous utilisons une valeur NÉGATIVE pour l'offset.
+            // Ajustez la valeur absolue pour contrôler l'ampleur du décalage.
+            // -Math.PI / 8 équivaut à -22.5 degrés.
+            // Pour moins de décalage : diminuez la valeur absolue (ex: -Math.PI / 16)
+            // Pour plus de décalage : augmentez la valeur absolue (ex: -Math.PI / 4)
+            const initialCameraAlphaOffset = -Math.PI / 8; // <-- MODIFIEZ CETTE VALEUR POUR LE DÉCALAGE
 
             // L'angle de départ de la caméra est Math.PI (180 degrés) pour centrer bluebot (qui est à l'angle 0).
-            // Nous ajoutons l'offset pour décaler la vue.
+            // Nous SOUSTRAYONS (ou ajoutons une valeur négative) l'offset pour décaler la vue vers la gauche,
+            // ce qui fait apparaître les objets plus à droite.
             camera.alpha = Math.PI + initialCameraAlphaOffset; 
-            // --- FIN DE LA ZONE DE MODIFICATION POUR LE DÉCALAGE GAUCHE ---
+            // --- FIN DE LA ZONE DE MODIFICATION POUR LE DÉCALAGE DROITE ---
 
-            camera.beta = Math.PI / 16; // Sur l'équateur
+            camera.beta = Math.PI / 2; // Sur l'équateur
             camera.radius = 450; // Ajustez si nécessaire pour voir tous les objets
 
             BABYLON.Animation.CreateAndStartAnimation(
