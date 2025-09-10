@@ -184,11 +184,10 @@
             font-family: 'Apex New', sans-serif;
             font-size: 18px;
             white-space: nowrap;
-            /* pointer-events: none; */ /* Le pointeur doit être activé pour le clic */
-            transform: translate(-50%, 0%); /* Centre le label par rapport à son point de positionnement */
-            z-index: 10; /* Assurez-vous qu'il est au-dessus du panorama */
-            visibility: hidden; /* Masqué par défaut */
-            cursor: pointer; /* Indique qu'il est cliquable */
+            transform: translate(-50%, 0%);
+            z-index: 10;
+            visibility: hidden;
+            cursor: pointer;
             transition: transform 0.2s ease-in-out, background-color 0.2s ease-in-out;
         }
         .object-label:hover {
@@ -253,7 +252,7 @@
     </div>
     <button id="scrollButton" class="actionButton">
         &#x21bb; </button>
-  
+    
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
     <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
     <script>
@@ -261,11 +260,16 @@
         const engine = new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true, alpha: true });
         const scene = new BABYLON.Scene(engine);
         scene.clearColor = new BABYLON.Color4(0, 0, 0, 0);
-        const camera = new BABYLON.ArcRotateCamera("cam", Math.PI/2, Math.PI/2.5, 300, new BABYLON.Vector3(0,0,0), scene);
+        
+        // Ajustez la position de la caméra pour mieux englober les objets
+        // L'angle alpha initial sera ajusté pour pointer vers bluebot.glb
+        // beta à Math.PI / 2 place la caméra sur l'équateur (pas de hauteur verticale)
+        const camera = new BABYLON.ArcRotateCamera("cam", Math.PI / 2, Math.PI / 2, 450, new BABYLON.Vector3(0, 0, 0), scene);
         camera.attachControl(canvas, true);
         camera.inputs.clear();
         new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0,1,0), scene);
         let panoLoaded = false;
+
         function supportsWebP(callback) {
             const img = new Image();
             img.onload = () => callback(img.width > 0 && img.height > 0);
@@ -304,27 +308,21 @@
             createPhotoDome(panoFile);
         });
 
-        const objectLabelMap = new Map(); // Pour stocker les associations mesh -> div label
-        const glbFiles = ["IA.glb", "labonumerique.glb", "bluebot.glb"];
-        const customAngles = [
-            0.5 * (Math.PI / 180),
-            302 * (Math.PI / 180),
-            112.5 * (Math.PI / 180),
-            214 * (Math.PI / 180)
-        ];
-        const radius = 400;
+        const objectLabelMap = new Map();
+        const glbFiles = ["bluebot.glb", "IA.glb", "labonumerique.glb"]; // Ordre ajusté pour centrer bluebot
         const objectLabels = [
-            "Outils IA d'aide à la réussite",
-            "Le laboratoire numérique des compétences",
-            "Réussir sa rentrée"
+            "Réussir sa rentrée", // Label pour "bluebot.glb"
+            "Outils IA d'aide à la réussite", // Label pour "IA.glb"
+            "Le laboratoire numérique des compétences" // Label pour "labonumerique.glb"
         ];
         const objectLinks = [
-         
+            "https://clubentrepreneurs.github.io/panorama10/page2.html",  // Lien pour "bluebot.glb"
             "https://clubentrepreneurs.github.io/panorama10/page3.html", // Lien pour "IA.glb"
-            "https://clubentrepreneurs.github.io/panorama10/page4.html", // Lien pour "labonumerique.glb"
-            "https://clubentrepreneurs.github.io/panorama10/page2.html"  // Lien pour "bluebot.glb"
+            "https://clubentrepreneurs.github.io/panorama10/page4.html" // Lien pour "labonumerique.glb"
         ];
 
+        const radius = 400; // Rayon de placement des GLB autour du centre
+        const angleIncrement = (2 * Math.PI) / glbFiles.length; // 120 degrés en radians
 
         glbFiles.forEach((file, index) => {
             BABYLON.SceneLoader.ImportMesh("", "./", file, scene, function(meshes, particleSystems, skeletons, animationGroups) {
@@ -337,38 +335,39 @@
                     animationGroups.forEach(ag => ag.start(true));
                 }
                 mesh.scaling = new BABYLON.Vector3(50, 50, 50);
+
+                // Créez un TransformNode comme pivot pour chaque GLB
                 const pivot = new BABYLON.TransformNode("pivot_" + index, scene);
-                mesh.position.z = radius;
-
-                // Modifiez la position du modèle "bluebot.glb" pour le rapprocher du centre.
-                if (file === "bluebot.glb") {
-                    mesh.position.x = -140;
-                    mesh.position.y = -190;
-                }
-
-                // Modifiez la position du modèle "labonumerique.glb" pour le rapprocher du centre.
-                if (file === "labonumerique.glb") {
-                    mesh.position.x = 230;
-                    mesh.position.y = -40;
-                }
-
-                 // Modifiez la position du modèle "labonumerique.glb" pour le rapprocher du centre.
-                if (file === "IA.glb") {
-                    mesh.position.x = 30;
-                    mesh.position.y = -90;
-                }
                 
-                if (customAngles[index] !== undefined) {
-                    pivot.rotation.y = customAngles[index];
-                }
+                // Positionnement des GLB sur l'équateur (y=0) à une certaine distance (radius)
+                // L'angle initial est 0 (face à la caméra), puis on ajoute l'incrément
+                let angle = index * angleIncrement;
+                
+                // Si c'est bluebot.glb (qui est le premier dans le tableau glbFiles),
+                // on veut qu'il soit directement en face de la caméra (angle 0).
+                // Les autres seront décalés de cet angle de départ.
+                // Si on a changé l'ordre, l'index 0 est bluebot.glb
+                pivot.rotation.y = angle; 
                 mesh.parent = pivot;
+                mesh.position.z = radius; // Place le mesh à 'radius' distance du pivot sur son axe Z local
+
+                // Ajustements spécifiques pour chaque mesh pour qu'ils soient sur le "sol"
+                // ou à la bonne hauteur relative à leur base.
+                // Ces valeurs peuvent nécessiter des ajustements précis en fonction des modèles GLB eux-mêmes.
+                if (file === "bluebot.glb") {
+                    mesh.position.y = -190; 
+                } else if (file === "IA.glb") {
+                    mesh.position.y = -90; 
+                } else if (file === "labonumerique.glb") {
+                    mesh.position.y = -40; 
+                }
 
                 // Création de l'overlay text pour chaque GLB
                 const labelDiv = document.createElement("div");
                 labelDiv.classList.add("object-label");
                 labelDiv.textContent = objectLabels[index];
                 document.body.appendChild(labelDiv);
-                objectLabelMap.set(mesh, labelDiv); // Associer le mesh au div
+                objectLabelMap.set(mesh, labelDiv);
 
                 // Ajouter le gestionnaire de clic si un lien est défini
                 if (objectLinks[index]) {
@@ -376,7 +375,7 @@
                         document.body.classList.add('transition-out');
                         setTimeout(() => {
                             window.location.href = objectLinks[index];
-                        }, 500); // Temps de la transition CSS
+                        }, 500);
                     });
                 }
             });
@@ -472,36 +471,41 @@
             }
         });
         function animateCameraSpin() {
-            camera.alpha -= Math.PI * 0.75;
-            camera.beta = Math.PI / 2.5;
-            camera.radius = 300;
+            // Ajustez l'alpha initial pour que bluebot soit centré (0 radian)
+            camera.alpha = Math.PI; // Regarde dans la direction opposée à bluebot initialement
+            camera.beta = Math.PI / 2; // Sur l'équateur
+            camera.radius = 450; // Ajustez si nécessaire pour voir tous les objets
+
             BABYLON.Animation.CreateAndStartAnimation(
                 "cameraSpin",
                 camera,
                 "alpha",
                 60,
-                120,
-                camera.alpha,
-                camera.alpha + Math.PI * 0.75,
+                120, // Durée de l'animation en images
+                camera.alpha, // Commence face à bluebot
+                camera.alpha + (2 * Math.PI) / 3, // Tourne d'un tiers du cercle
                 BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT,
                 new BABYLON.CubicEase()
             );
-            BABYLON.Animation.CreateAndStartAnimation(
-                "cameraZoom",
-                camera,
-                "radius",
-                60,
-                120,
-                camera.radius * 1.2,
-                camera.radius,
-                BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT,
-                new BABYLON.CubicEase()
-            );
+            
+            // Pas besoin de zoomer si le radius est déjà bien ajusté
+            // BABYLON.Animation.CreateAndStartAnimation(
+            //     "cameraZoom",
+            //     camera,
+            //     "radius",
+            //     60,
+            //     120,
+            //     camera.radius * 1.2,
+            //     camera.radius,
+            //     BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT,
+            //     new BABYLON.CubicEase()
+            // );
+            
             setTimeout(() => {
                 camera.attachControl(canvas, true);
                 camera.inputs.add(new BABYLON.ArcRotateCameraPointersInput());
                 camera.inputs.add(new BABYLON.ArcRotateCameraKeyboardInput());
-            }, 2000);
+            }, 2000); // Assurez-vous que c'est après l'animation
         }
     </script>
 </body>
