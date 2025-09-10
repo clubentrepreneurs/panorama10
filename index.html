@@ -184,10 +184,16 @@
             font-family: 'Apex New', sans-serif;
             font-size: 18px;
             white-space: nowrap;
-            pointer-events: none; /* Pour que le texte ne bloque pas les interactions avec le canvas */
+            /* pointer-events: none; */ /* Le pointeur doit être activé pour le clic */
             transform: translate(-50%, 0%); /* Centre le label par rapport à son point de positionnement */
             z-index: 10; /* Assurez-vous qu'il est au-dessus du panorama */
             visibility: hidden; /* Masqué par défaut */
+            cursor: pointer; /* Indique qu'il est cliquable */
+            transition: transform 0.2s ease-in-out, background-color 0.2s ease-in-out;
+        }
+        .object-label:hover {
+            transform: translate(-50%, 0%) scale(1.05);
+            background-color: rgba(255, 255, 255, 0.9);
         }
         .actionButton {
             position: fixed;
@@ -314,6 +320,13 @@
             "Intranet étudiant",
             "Réussir sa rentrée"
         ];
+        const objectLinks = [
+            null, // Pas de lien pour "Bienvenue"
+            "https://clubentrepreneurs.github.io/panorama10/page3.html", // Lien pour "IA.glb"
+            "https://clubentrepreneurs.github.io/panorama10/page4.html", // Lien pour "labonumerique.glb"
+            "https://clubentrepreneurs.github.io/panorama10/page2.html"  // Lien pour "bluebot.glb"
+        ];
+
 
         glbFiles.forEach((file, index) => {
             BABYLON.SceneLoader.ImportMesh("", "./", file, scene, function(meshes, particleSystems, skeletons, animationGroups) {
@@ -353,6 +366,16 @@
                 labelDiv.textContent = objectLabels[index];
                 document.body.appendChild(labelDiv);
                 objectLabelMap.set(mesh, labelDiv); // Associer le mesh au div
+
+                // Ajouter le gestionnaire de clic si un lien est défini
+                if (objectLinks[index]) {
+                    labelDiv.addEventListener('click', () => {
+                        document.body.classList.add('transition-out');
+                        setTimeout(() => {
+                            window.location.href = objectLinks[index];
+                        }, 500); // Temps de la transition CSS
+                    });
+                }
             });
         });
 
