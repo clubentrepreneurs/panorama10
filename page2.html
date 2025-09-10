@@ -100,6 +100,13 @@
       font-style: normal;
     }
 
+    @font-face {
+  font-family: 'Apex New';
+  src: url('fonts/ApexNew-Bold.otf') format('opentype');
+  font-weight: bold;
+  font-style: normal;
+}
+
     /* === Styles pour le menu Hamburger === */
     #menu-container {
         position: fixed;
@@ -223,17 +230,7 @@
       right: 20px;
     }
 
-    /* === Forcer le menu desktop sur mobile === */
-@media (max-width: 768px) {
-  #menu-overlay {
-    transform: translateX(0) !important; /* Toujours visible */
-    width: 250px;
-  }
-  #hamburger-button,
-  #hamburger-label {
-    display: none; /* On cache le bouton sur mobile */
-  }
-}
+  
 
   </style>
 </head>
