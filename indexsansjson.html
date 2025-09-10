@@ -19,12 +19,31 @@
             display: block;
             touch-action: none;
             background-color: transparent !important;
-            /* La classe .hidden sera retirée par JavaScript au démarrage */
         }
-        /* #renderCanvas.hidden { visibility: hidden; } */ /* Pas besoin si on ne cache plus initialement */
-
-        /* Styles #lottie-container et #lottie-container.fade-out supprimés */
-
+        /* --- DÉBUT DE LA ZONE DE MODIFICATION --- */
+        /* La classe .hidden sur renderCanvas ne sera plus utilisée initialement */
+        /* #renderCanvas.hidden {
+            visibility: hidden;
+        } */
+        /* Le conteneur Lottie n'est plus nécessaire */
+        /* #lottie-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: white;
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 1s ease-in-out;
+        }
+        #lottie-container.fade-out {
+            opacity: 0;
+            pointer-events: none;
+        } */
+        /* --- FIN DE LA ZONE DE MODIFICATION --- */
         #customText {
             position: absolute;
             bottom: 5vh;
@@ -72,8 +91,8 @@
             z-index: 1001;
         }
         #hamburger-button {
-            width: 40px;
-            height: 35px;
+            width: 60px; /* Augmenté de 40px à 60px (40 * 1.5) */
+            height: 35px; /* On garde la hauteur pour la bonne proportion des traits */
             cursor: pointer;
             display: flex;
             flex-direction: column;
@@ -83,7 +102,7 @@
             padding: 0;
         }
         #hamburger-button .line {
-            width: 100%;
+            width: 100%; /* S'adapte à la largeur du bouton */
             height: 6px;
             background-color: #E5005B;
             transition: all 0.3s ease-in-out;
@@ -106,7 +125,7 @@
             font-family: 'Apex New', sans-serif;
             font-weight: bold;
             color: #E5005B;
-            font-size: 14px;
+            font-size: 21px; /* Augmenté de 14px à 21px (14 * 1.5) */
             white-space: nowrap;
         }
         #menu-overlay {
@@ -199,7 +218,10 @@
         #scrollButton {
             right: 20px;
         }
-        /* #linkButton { right: 80px; font-size: 16px; } */ /* Suppression du bouton linkButton si plus utilisé */
+        #linkButton {
+            right: 80px;
+            font-size: 16px;
+        }
         body.transition-out {
             transition: opacity 0.5s ease-in-out;
             opacity: 0;
@@ -207,7 +229,8 @@
     </style>
 </head>
 <body>
-    <canvas id="renderCanvas"></canvas> <div id="customText">
+    <canvas id="renderCanvas"></canvas>
+    <div id="customText">
         <br>
     </div>
     
@@ -223,13 +246,15 @@
     <div id="menu-overlay">
         <h2>Toutes vos ressources pour réussir à l'Université</h2>
         <ul>
+            <li><a href="indexsansjson.html">Page d'accueil</a></li>
             <li><a href="page2.html">Vidéos "Réussir votre rentrée 2025"</a></li>
             <li><a href="page3.html">Outils IA d'aide à la réussite</a></li>
-            <li><a href="page4.html">Le laboratoire numérique des compétences : boostez votre réussite !"</a></li>
+            <li><a href="page4.html">Le laboratoire numérique : boostez votre réussite grâce à vos compétences!"</a></li>
         </ul>
     </div>
     <button id="scrollButton" class="actionButton">
         &#x21bb; </button>
+    
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
     <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
     <script>
@@ -237,11 +262,16 @@
         const engine = new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true, alpha: true });
         const scene = new BABYLON.Scene(engine);
         scene.clearColor = new BABYLON.Color4(0, 0, 0, 0);
-        const camera = new BABYLON.ArcRotateCamera("cam", Math.PI/2, Math.PI/2.5, 300, new BABYLON.Vector3(0,0,0), scene);
+        
+        // Ajustez la position de la caméra pour mieux englober les objets
+        // L'angle alpha initial sera ajusté pour pointer vers bluebot.glb
+        // beta à Math.PI / 2 place la caméra sur l'équateur (pas de hauteur verticale)
+        const camera = new BABYLON.ArcRotateCamera("cam", Math.PI / 2, Math.PI / 2, 450, new BABYLON.Vector3(0, 0, 0), scene);
         camera.attachControl(canvas, true);
         camera.inputs.clear();
         new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0,1,0), scene);
         let panoLoaded = false;
+
         function supportsWebP(callback) {
             const img = new Image();
             img.onload = () => callback(img.width > 0 && img.height > 0);
@@ -253,8 +283,10 @@
             dome.imageMode = BABYLON.PhotoDome.MODE_MONOSCOPIC;
             dome.onReady = () => {
                 panoLoaded = true;
-                // Appel direct à animateCameraSpin car il n'y a plus de Lottie
+                // --- DÉBUT DE LA ZONE DE MODIFICATION ---
+                // Appelle animateCameraSpin directement, car il n'y a plus d'animation Lottie à attendre.
                 animateCameraSpin(); 
+                // --- FIN DE LA ZONE DE MODIFICATION ---
             };
             const domeMat = dome.mesh.material;
             if (panoFile.endsWith(".jpg") || panoFile.endsWith(".jpeg")) {
@@ -269,45 +301,36 @@
                 domeMat.needDepthPrePass = true;
             }
         }
-        
-        // La variable lottieAnimationComplete n'est plus nécessaire
-        // let lottieAnimationComplete = false; 
-
-        // checkAndStartPanoramaIntro peut être simplifiée ou supprimée si l'appel est direct
+        // let lottieAnimationComplete = false; // Plus besoin de cette variable
+        // --- DÉBUT DE LA ZONE DE MODIFICATION ---
+        // Cette fonction n'est plus utile dans son format actuel.
         // function checkAndStartPanoramaIntro() {
-        //     if (panoLoaded) { // Plus besoin de lottieAnimationComplete
+        //     if (panoLoaded && lottieAnimationComplete) {
         //         canvas.classList.remove('hidden');
         //         animateCameraSpin();
         //     }
         // }
-
+        // --- FIN DE LA ZONE DE MODIFICATION ---
         supportsWebP((isSupported) => {
             const panoFile = isSupported ? "test7.webp" : "abstract1.png";
             createPhotoDome(panoFile);
         });
 
         const objectLabelMap = new Map();
-        const glbFiles = ["IA.glb", "socleetoiletoque2.glb", "labonumerique.glb", "bluebot.glb"];
-        const customAngles = [
-            0.5 * (Math.PI / 180),
-            302 * (Math.PI / 180),
-            112.5 * (Math.PI / 180),
-            214 * (Math.PI / 180)
-        ];
-        const radius = 400;
+        const glbFiles = ["bluebot.glb", "IA.glb", "labonumerique.glb"]; // Ordre ajusté pour centrer bluebot
         const objectLabels = [
-            "Bienvenue",
-            "Compte Sésame",
-            "Intranet étudiant",
-            "Réussir sa rentrée"
+            "Réussir sa rentrée", // Label pour "bluebot.glb"
+            "Outils IA d'aide à la réussite", // Label pour "IA.glb"
+            "Le laboratoire numérique des compétences" // Label pour "labonumerique.glb"
         ];
         const objectLinks = [
-            null,
-            "https://clubentrepreneurs.github.io/panorama10/page3.html",
-            "https://clubentrepreneurs.github.io/panorama10/page4.html",
-            "https://clubentrepreneurs.github.io/panorama10/page2.html"
+            "https://clubentrepreneurs.github.io/panorama10/page2.html",  // Lien pour "bluebot.glb"
+            "https://clubentrepreneurs.github.io/panorama10/page3.html", // Lien pour "IA.glb"
+            "https://clubentrepreneurs.github.io/panorama10/page4.html" // Lien pour "labonumerique.glb"
         ];
 
+        const radius = 400; // Rayon de placement des GLB autour du centre
+        const angleIncrement = (2 * Math.PI) / glbFiles.length; // 120 degrés en radians
 
         glbFiles.forEach((file, index) => {
             BABYLON.SceneLoader.ImportMesh("", "./", file, scene, function(meshes, particleSystems, skeletons, animationGroups) {
@@ -319,30 +342,52 @@
                 if (animationGroups) {
                     animationGroups.forEach(ag => ag.start(true));
                 }
-                mesh.scaling = new BABYLON.Vector3(50, 50, 50);
-                const pivot = new BABYLON.TransformNode("pivot_" + index, scene);
-                mesh.position.z = radius;
-
-                if (file === "bluebot.glb") {
-                    mesh.position.x = -230;
-                    mesh.position.y = -190;
-                }
-                if (file === "labonumerique.glb") {
-                    mesh.position.x = 230;
-                    mesh.position.y = -90;
-                }
                 
-                if (customAngles[index] !== undefined) {
-                    pivot.rotation.y = customAngles[index];
-                }
-                mesh.parent = pivot;
+                // Échelle de base pour tous les modèles
+                mesh.scaling = new BABYLON.Vector3(50, 50, 50);
 
+                // --- DÉBUT DE LA ZONE DE MODIFICATION POUR LA TAILLE ET LA POSITION Y DE LABONUMERIQUE.GLB ---
+                if (file === "labonumerique.glb") {
+                    // Doubler la taille du modèle (facteur 2.0)
+                    const scaleFactor = 2.0; // <<< Changé à 2.0 pour doubler la taille
+                    mesh.scaling.x *= scaleFactor;
+                    mesh.scaling.y *= scaleFactor;
+                    mesh.scaling.z *= scaleFactor;
+
+                    // Descendre le modèle un peu plus bas verticalement.
+                    // Une valeur plus négative fait descendre le modèle. Ajustez si besoin.
+                    mesh.position.y = -60; // <<< Valeur ajustée pour le descendre
+                }
+                // --- FIN DE LA ZONE DE MODIFICATION ---
+
+                // Créez un TransformNode comme pivot pour chaque GLB
+                const pivot = new BABYLON.TransformNode("pivot_" + index, scene);
+                
+                // Positionnement des GLB sur l'équateur (y=0) à une certaine distance (radius)
+                let angle = index * angleIncrement;
+                
+                pivot.rotation.y = angle; 
+                mesh.parent = pivot;
+                mesh.position.z = radius; // Place le mesh à 'radius' distance du pivot sur son axe Z local
+
+                // Ajustements spécifiques pour chaque mesh pour qu'ils soient sur le "sol"
+                // ou à la bonne hauteur relative à leur base.
+                // Ces valeurs peuvent nécessiter des ajustements précis en fonction des modèles GLB eux-mêmes.
+                if (file === "bluebot.glb") {
+                    mesh.position.y = -190; 
+                } else if (file === "IA.glb") {
+                    mesh.position.y = -90; 
+                } 
+                // La modification pour labonumerique.glb est maintenant dans le bloc "if (file === 'labonumerique.glb')" ci-dessus.
+
+                // Création de l'overlay text pour chaque GLB
                 const labelDiv = document.createElement("div");
                 labelDiv.classList.add("object-label");
                 labelDiv.textContent = objectLabels[index];
                 document.body.appendChild(labelDiv);
                 objectLabelMap.set(mesh, labelDiv);
 
+                // Ajouter le gestionnaire de clic si un lien est défini
                 if (objectLinks[index]) {
                     labelDiv.addEventListener('click', () => {
                         document.body.classList.add('transition-out');
@@ -356,13 +401,15 @@
 
         engine.runRenderLoop(() => {
             scene.render();
+            // Mettre à jour la position des labels textuels
             objectLabelMap.forEach((labelDiv, mesh) => {
                 if (!mesh) return;
 
+                // Obtenir la position du bas du mesh dans l'espace monde
                 const boundingBox = mesh.getBoundingInfo().boundingBox;
                 const bottomCenter = new BABYLON.Vector3(
                     (boundingBox.minimumWorld.x + boundingBox.maximumWorld.x) / 2,
-                    boundingBox.minimumWorld.y - 10,
+                    boundingBox.minimumWorld.y - 10, // Un petit offset pour le placer sous le modèle
                     (boundingBox.minimumWorld.z + boundingBox.maximumWorld.z) / 2
                 );
 
@@ -373,7 +420,7 @@
                     camera.viewport.toGlobal(engine.getRenderWidth(), engine.getRenderHeight())
                 );
 
-                if (pos.z >= 0 && pos.z <= 1) {
+                if (pos.z >= 0 && pos.z <= 1) { // Vérifier si le mesh est dans le champ de vision
                     labelDiv.style.left = `${pos.x}px`;
                     labelDiv.style.top = `${pos.y}px`;
                     labelDiv.style.visibility = "visible";
@@ -393,13 +440,29 @@
         customText.addEventListener("click", () => {
             customText.classList.toggle("zoomed");
         });
-        
-        // Le bloc DOMContentLoaded a été déplacé/simplifié car Lottie a été supprimé.
-        // Les écouteurs pour scrollButton et linkButton sont placés ici directement.
         document.addEventListener("DOMContentLoaded", () => {
-            // Le code Lottie a été supprimé de ce bloc
-            // lottieAnimationComplete n'est plus utilisée, et l'animation du panorama démarre directement
-            // quand le dome est prêt (voir createPhotoDome).
+            // --- DÉBUT DE LA ZONE DE MODIFICATION ---
+            // Le code Lottie a été supprimé
+            // const lottieContainer = document.getElementById('lottie-container');
+            // const anim = lottie.loadAnimation({
+            //     container: lottieContainer,
+            //     renderer: 'svg',
+            //     loop: false,
+            //     autoplay: true,
+            //     path: 'intro.json',
+            //     rendererSettings: {
+            //         preserveAspectRatio: 'xMidYMid slice'
+            //     }
+            // });
+            // anim.addEventListener('complete', () => {
+            //     lottieAnimationComplete = true;
+            //     lottieContainer.classList.add('fade-out');
+            //     setTimeout(() => {
+            //         lottieContainer.style.display = 'none';
+            //     }, 1000);
+            //     checkAndStartPanoramaIntro();
+            // });
+            // --- FIN DE LA ZONE DE MODIFICATION ---
 
             const scrollButton = document.getElementById('scrollButton');
             if (scrollButton) {
@@ -418,50 +481,44 @@
                     );
                 });
             }
-            // Le bouton linkButton a été supprimé du HTML, donc ce bloc peut aussi être retiré si vous ne l'utilisez plus
-            // const linkButton = document.getElementById('linkButton');
-            // if (linkButton) {
-            //     linkButton.addEventListener('click', (e) => {
-            //         e.preventDefault();
-            //         document.body.classList.add('transition-out');
-            //         setTimeout(() => {
-            //             window.location.href = 'page2.html';
-            //         }, 500);
-            //     });
-            // }
+            const linkButton = document.getElementById('linkButton');
+            if (linkButton) {
+                linkButton.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    document.body.classList.add('transition-out');
+                    setTimeout(() => {
+                        window.location.href = 'page2.html';
+                    }, 500);
+                });
+            }
         });
 
         function animateCameraSpin() {
-            camera.alpha -= Math.PI * 0.75;
-            camera.beta = Math.PI / 2.5;
-            camera.radius = 300;
+            // --- DÉBUT DE LA ZONE DE MODIFICATION POUR LE DÉCALAGE DROITE ---
+            const initialCameraAlphaOffset = -Math.PI / 8; 
+            camera.alpha = Math.PI + initialCameraAlphaOffset; 
+            // --- FIN DE LA ZONE DE MODIFICATION POUR LE DÉCALAGE DROITE ---
+
+            camera.beta = Math.PI / 2; // Sur l'équateur
+            camera.radius = 450; // Ajustez si nécessaire pour voir tous les objets
+
             BABYLON.Animation.CreateAndStartAnimation(
                 "cameraSpin",
                 camera,
                 "alpha",
                 60,
-                120,
-                camera.alpha,
-                camera.alpha + Math.PI * 0.75,
+                120, // Durée de l'animation en images
+                camera.alpha, // Commence avec le nouvel alpha décalé
+                camera.alpha + (2 * Math.PI) / 3, // Et l'animation continue à partir de ce point
                 BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT,
                 new BABYLON.CubicEase()
             );
-            BABYLON.Animation.CreateAndStartAnimation(
-                "cameraZoom",
-                camera,
-                "radius",
-                60,
-                120,
-                camera.radius * 1.2,
-                camera.radius,
-                BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT,
-                new BABYLON.CubicEase()
-            );
+            
             setTimeout(() => {
                 camera.attachControl(canvas, true);
                 camera.inputs.add(new BABYLON.ArcRotateCameraPointersInput());
                 camera.inputs.add(new BABYLON.ArcRotateCameraKeyboardInput());
-            }, 2000);
+            }, 2000); // Assurez-vous que c'est après l'animation
         }
     </script>
 </body>
