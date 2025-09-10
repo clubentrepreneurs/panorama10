@@ -5,7 +5,6 @@
     <title>GLB + panorama + menu</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
     <link href="https://fonts.cdnfonts.com/css/apex-new" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.10.2/lottie.min.js"></script>
     <style>
         html, body {
             margin: 0;
@@ -20,27 +19,12 @@
             display: block;
             touch-action: none;
             background-color: transparent !important;
+            /* La classe .hidden sera retirée par JavaScript au démarrage */
         }
-        #renderCanvas.hidden {
-            visibility: hidden;
-        }
-        #lottie-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: white;
-            z-index: 9999;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            transition: opacity 1s ease-in-out;
-        }
-        #lottie-container.fade-out {
-            opacity: 0;
-            pointer-events: none;
-        }
+        /* #renderCanvas.hidden { visibility: hidden; } */ /* Pas besoin si on ne cache plus initialement */
+
+        /* Styles #lottie-container et #lottie-container.fade-out supprimés */
+
         #customText {
             position: absolute;
             bottom: 5vh;
@@ -184,11 +168,10 @@
             font-family: 'Apex New', sans-serif;
             font-size: 18px;
             white-space: nowrap;
-            /* pointer-events: none; */ /* Le pointeur doit être activé pour le clic */
-            transform: translate(-50%, 0%); /* Centre le label par rapport à son point de positionnement */
-            z-index: 10; /* Assurez-vous qu'il est au-dessus du panorama */
-            visibility: hidden; /* Masqué par défaut */
-            cursor: pointer; /* Indique qu'il est cliquable */
+            transform: translate(-50%, 0%);
+            z-index: 10;
+            visibility: hidden;
+            cursor: pointer;
             transition: transform 0.2s ease-in-out, background-color 0.2s ease-in-out;
         }
         .object-label:hover {
@@ -216,10 +199,7 @@
         #scrollButton {
             right: 20px;
         }
-        #linkButton {
-            right: 80px;
-            font-size: 16px;
-        }
+        /* #linkButton { right: 80px; font-size: 16px; } */ /* Suppression du bouton linkButton si plus utilisé */
         body.transition-out {
             transition: opacity 0.5s ease-in-out;
             opacity: 0;
@@ -227,9 +207,7 @@
     </style>
 </head>
 <body>
-    <div id="lottie-container"></div>
-    <canvas id="renderCanvas" class="hidden"></canvas>
-    <div id="customText">
+    <canvas id="renderCanvas"></canvas> <div id="customText">
         <br>
     </div>
     
@@ -252,9 +230,6 @@
     </div>
     <button id="scrollButton" class="actionButton">
         &#x21bb; </button>
-    <button id="linkButton" class="actionButton">
-        Go
-    </button>
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
     <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
     <script>
@@ -278,7 +253,8 @@
             dome.imageMode = BABYLON.PhotoDome.MODE_MONOSCOPIC;
             dome.onReady = () => {
                 panoLoaded = true;
-                checkAndStartPanoramaIntro();
+                // Appel direct à animateCameraSpin car il n'y a plus de Lottie
+                animateCameraSpin(); 
             };
             const domeMat = dome.mesh.material;
             if (panoFile.endsWith(".jpg") || panoFile.endsWith(".jpeg")) {
@@ -293,20 +269,25 @@
                 domeMat.needDepthPrePass = true;
             }
         }
-        let lottieAnimationComplete = false;
-        function checkAndStartPanoramaIntro() {
-            if (panoLoaded && lottieAnimationComplete) {
-                canvas.classList.remove('hidden');
-                animateCameraSpin();
-            }
-        }
+        
+        // La variable lottieAnimationComplete n'est plus nécessaire
+        // let lottieAnimationComplete = false; 
+
+        // checkAndStartPanoramaIntro peut être simplifiée ou supprimée si l'appel est direct
+        // function checkAndStartPanoramaIntro() {
+        //     if (panoLoaded) { // Plus besoin de lottieAnimationComplete
+        //         canvas.classList.remove('hidden');
+        //         animateCameraSpin();
+        //     }
+        // }
+
         supportsWebP((isSupported) => {
             const panoFile = isSupported ? "test7.webp" : "abstract1.png";
             createPhotoDome(panoFile);
         });
 
-        const objectLabelMap = new Map(); // Pour stocker les associations mesh -> div label
-        const glbFiles = ["socleetoiletoque2.glb", "labonumerique.glb", "bluebot.glb"];
+        const objectLabelMap = new Map();
+        const glbFiles = ["IA.glb", "socleetoiletoque2.glb", "labonumerique.glb", "bluebot.glb"];
         const customAngles = [
             0.5 * (Math.PI / 180),
             302 * (Math.PI / 180),
@@ -315,15 +296,16 @@
         ];
         const radius = 400;
         const objectLabels = [
-            "Outils IA d'aide à la réussite",
-            "Le laboratoire numérique des compétences",
+            "Bienvenue",
+            "Compte Sésame",
+            "Intranet étudiant",
             "Réussir sa rentrée"
         ];
         const objectLinks = [
-         
-            "https://clubentrepreneurs.github.io/panorama10/page3.html", // Lien pour "socleetoiletoque2.glb"
-            "https://clubentrepreneurs.github.io/panorama10/page4.html", // Lien pour "labonumerique.glb"
-            "https://clubentrepreneurs.github.io/panorama10/page2.html"  // Lien pour "bluebot.glb"
+            null,
+            "https://clubentrepreneurs.github.io/panorama10/page3.html",
+            "https://clubentrepreneurs.github.io/panorama10/page4.html",
+            "https://clubentrepreneurs.github.io/panorama10/page2.html"
         ];
 
 
@@ -341,38 +323,32 @@
                 const pivot = new BABYLON.TransformNode("pivot_" + index, scene);
                 mesh.position.z = radius;
 
-                // Modifiez la position du modèle "bluebot.glb" pour le rapprocher du centre.
                 if (file === "bluebot.glb") {
                     mesh.position.x = -230;
                     mesh.position.y = -190;
                 }
-
-                // Modifiez la position du modèle "labonumerique.glb" pour le rapprocher du centre.
                 if (file === "labonumerique.glb") {
                     mesh.position.x = 230;
                     mesh.position.y = -90;
                 }
-
                 
                 if (customAngles[index] !== undefined) {
                     pivot.rotation.y = customAngles[index];
                 }
                 mesh.parent = pivot;
 
-                // Création de l'overlay text pour chaque GLB
                 const labelDiv = document.createElement("div");
                 labelDiv.classList.add("object-label");
                 labelDiv.textContent = objectLabels[index];
                 document.body.appendChild(labelDiv);
-                objectLabelMap.set(mesh, labelDiv); // Associer le mesh au div
+                objectLabelMap.set(mesh, labelDiv);
 
-                // Ajouter le gestionnaire de clic si un lien est défini
                 if (objectLinks[index]) {
                     labelDiv.addEventListener('click', () => {
                         document.body.classList.add('transition-out');
                         setTimeout(() => {
                             window.location.href = objectLinks[index];
-                        }, 500); // Temps de la transition CSS
+                        }, 500);
                     });
                 }
             });
@@ -380,15 +356,13 @@
 
         engine.runRenderLoop(() => {
             scene.render();
-            // Mettre à jour la position des labels textuels
             objectLabelMap.forEach((labelDiv, mesh) => {
                 if (!mesh) return;
 
-                // Obtenir la position du bas du mesh dans l'espace monde
                 const boundingBox = mesh.getBoundingInfo().boundingBox;
                 const bottomCenter = new BABYLON.Vector3(
                     (boundingBox.minimumWorld.x + boundingBox.maximumWorld.x) / 2,
-                    boundingBox.minimumWorld.y - 10, // Un petit offset pour le placer sous le modèle
+                    boundingBox.minimumWorld.y - 10,
                     (boundingBox.minimumWorld.z + boundingBox.maximumWorld.z) / 2
                 );
 
@@ -399,7 +373,7 @@
                     camera.viewport.toGlobal(engine.getRenderWidth(), engine.getRenderHeight())
                 );
 
-                if (pos.z >= 0 && pos.z <= 1) { // Vérifier si le mesh est dans le champ de vision
+                if (pos.z >= 0 && pos.z <= 1) {
                     labelDiv.style.left = `${pos.x}px`;
                     labelDiv.style.top = `${pos.y}px`;
                     labelDiv.style.visibility = "visible";
@@ -419,26 +393,14 @@
         customText.addEventListener("click", () => {
             customText.classList.toggle("zoomed");
         });
+        
+        // Le bloc DOMContentLoaded a été déplacé/simplifié car Lottie a été supprimé.
+        // Les écouteurs pour scrollButton et linkButton sont placés ici directement.
         document.addEventListener("DOMContentLoaded", () => {
-            const lottieContainer = document.getElementById('lottie-container');
-            const anim = lottie.loadAnimation({
-                container: lottieContainer,
-                renderer: 'svg',
-                loop: false,
-                autoplay: true,
-                path: 'intro.json',
-                rendererSettings: {
-                    preserveAspectRatio: 'xMidYMid slice'
-                }
-            });
-            anim.addEventListener('complete', () => {
-                lottieAnimationComplete = true;
-                lottieContainer.classList.add('fade-out');
-                setTimeout(() => {
-                    lottieContainer.style.display = 'none';
-                }, 1000);
-                checkAndStartPanoramaIntro();
-            });
+            // Le code Lottie a été supprimé de ce bloc
+            // lottieAnimationComplete n'est plus utilisée, et l'animation du panorama démarre directement
+            // quand le dome est prêt (voir createPhotoDome).
+
             const scrollButton = document.getElementById('scrollButton');
             if (scrollButton) {
                 scrollButton.addEventListener('click', () => {
@@ -456,17 +418,19 @@
                     );
                 });
             }
-            const linkButton = document.getElementById('linkButton');
-            if (linkButton) {
-                linkButton.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    document.body.classList.add('transition-out');
-                    setTimeout(() => {
-                        window.location.href = 'page2.html';
-                    }, 500);
-                });
-            }
+            // Le bouton linkButton a été supprimé du HTML, donc ce bloc peut aussi être retiré si vous ne l'utilisez plus
+            // const linkButton = document.getElementById('linkButton');
+            // if (linkButton) {
+            //     linkButton.addEventListener('click', (e) => {
+            //         e.preventDefault();
+            //         document.body.classList.add('transition-out');
+            //         setTimeout(() => {
+            //             window.location.href = 'page2.html';
+            //         }, 500);
+            //     });
+            // }
         });
+
         function animateCameraSpin() {
             camera.alpha -= Math.PI * 0.75;
             camera.beta = Math.PI / 2.5;
