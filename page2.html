@@ -125,7 +125,6 @@
         transition: all 0.3s ease-in-out;
     }
     
-    /* Styles pour la transformation en croix */
     #hamburger-button.open .line:nth-child(1) {
         transform: translateY(14px) rotate(45deg);
     }
@@ -136,7 +135,6 @@
         transform: translateY(-14px) rotate(-45deg);
     }
 
-    /* Style pour le texte "MENU" */
     #hamburger-label {
         position: absolute;
         top: 100%;
@@ -171,7 +169,6 @@
         transform: translateX(0);
     }
 
-    /* NOUVEAUX STYLES POUR LE MENU */
     #menu-overlay h2 {
         font-size: 20px;
         font-weight: bold;
@@ -202,44 +199,29 @@
         color: #00AFD7;
         font-weight: bold;
     }
-    /* FIN DES NOUVEAUX STYLES */
 
-
-
-
-.actionButton {
-            position: fixed;
-            bottom: 20px;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background-color: #E5005B;
-            border: none;
-            color: white;
-            font-size: 24px;
-            cursor: pointer;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
-        }
-        #scrollButton {
-            right: 20px;
-        }
-        #linkButton {
-            right: 80px;
-            font-size: 16px;
-        }
-        body.transition-out {
-            transition: opacity 0.5s ease-in-out;
-            opacity: 0;
-        }
-
-
-
-      
+    /* === BOUTON SCROLL === */
+    .actionButton {
+      position: fixed;
+      bottom: 20px;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background-color: #E5005B;
+      border: none;
+      color: white;
+      font-size: 24px;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+    }
+    #scrollButton {
+      right: 20px;
+    }
   </style>
 </head>
 <body>
@@ -276,6 +258,9 @@
     <button id="backButton">Retour à la scène 3D</button>
   </div>
 
+  <!-- === BOUTON SCROLL AJOUTÉ === -->
+  <button id="scrollButton" class="actionButton">&#x21bb;</button>
+
   <script src="https://cdn.babylonjs.com/babylon.js"></script>
   <script src="https://cdn.babylonjs.com/loaders/babylon.glTF2FileLoader.js"></script>
 
@@ -290,10 +275,6 @@
       const panoFile = "abstract1.png";
       const dome = new BABYLON.PhotoDome("panorama", panoFile, { resolution: 32, size: 1000 }, scene);
       dome.imageMode = BABYLON.PhotoDome.MODE_MONOSCOPIC;
-      const domeMat = dome.mesh.material;
-      domeMat.diffuseTexture.hasAlpha = false;
-      domeMat.useAlphaFromDiffuseTexture = false;
-      domeMat.transparencyMode = BABYLON.Material.MATERIAL_OPAQUE;
 
       const isMobile = window.innerWidth < 768;
       const alphaTarget = Math.PI / 2;
@@ -357,7 +338,7 @@
             camera.viewport.toGlobal(engine.getRenderWidth(), engine.getRenderHeight()));
           if (proj.z >= 0 && proj.z <= 1) {
             label.style.left = `${proj.x}px`;
-            label.style.top = `${proj.y + 100}px`; // Décalage vertical vers le bas
+            label.style.top = `${proj.y + 100}px`;
             label.classList.add("show");
           } else {
             label.classList.remove("show");
@@ -369,11 +350,11 @@
       const videoFrame = document.getElementById("videoFrame");
 
       const labelLinks = {
-        label: "https://www.youtube.com/embed/Jgcb7hjdgaU?autoplay=1", // socleetoiletoque.glb
-        label2: "https://www.youtube.com/embed/T6CI_hIbJIA?autoplay=1", // agenda.glb
-        label3: "https://www.youtube.com/embed/SWIDVGO3Gg0?autoplay=1", // computer.glb
-        label4: "https://www.youtube.com/embed/lUU1G-6klpI?autoplay=1", // coffre.glb
-        label5: "https://www.youtube.com/embed/KDd3JMkRvbI?autoplay=1"  // livres.glb
+        label: "https://www.youtube.com/embed/Jgcb7hjdgaU?autoplay=1",
+        label2: "https://www.youtube.com/embed/T6CI_hIbJIA?autoplay=1",
+        label3: "https://www.youtube.com/embed/SWIDVGO3Gg0?autoplay=1",
+        label4: "https://www.youtube.com/embed/lUU1G-6klpI?autoplay=1",
+        label5: "https://www.youtube.com/embed/KDd3JMkRvbI?autoplay=1"
       };
 
       for (const [labelId, url] of Object.entries(labelLinks)) {
@@ -388,57 +369,40 @@
         videoContainer.style.display = "none";
       });
 
+      // === LOGIQUE DU BOUTON SCROLL ===
+      const scrollButton = document.getElementById('scrollButton');
+      scrollButton.addEventListener('click', () => {
+        const rotationIncrement = 30 * (Math.PI / 180);
+        BABYLON.Animation.CreateAndStartAnimation(
+          "scrollCam",
+          camera,
+          "alpha",
+          60,
+          60,
+          camera.alpha,
+          camera.alpha + rotationIncrement,
+          BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT,
+          new BABYLON.CubicEase()
+        );
+      });
+
       window.addEventListener("resize", () => engine.resize());
       engine.runRenderLoop(() => scene.render());
     }
 
-    // Ajout de la logique pour le menu hamburger
     document.addEventListener("DOMContentLoaded", () => {
-        const hamburgerButton = document.getElementById('hamburger-button');
-        const menuOverlay = document.getElementById('menu-overlay');
+      const hamburgerButton = document.getElementById('hamburger-button');
+      const menuOverlay = document.getElementById('menu-overlay');
 
-        if (hamburgerButton && menuOverlay) {
-            hamburgerButton.addEventListener('click', () => {
-                hamburgerButton.classList.toggle('open');
-                menuOverlay.classList.toggle('open');
-            });
-        }
+      if (hamburgerButton && menuOverlay) {
+        hamburgerButton.addEventListener('click', () => {
+          hamburgerButton.classList.toggle('open');
+          menuOverlay.classList.toggle('open');
+        });
+      }
     });
 
     initBabylon();
-
-
-
-
-       const scrollButton = document.getElementById('scrollButton');
-            if (scrollButton) {
-                scrollButton.addEventListener('click', () => {
-                    const rotationIncrement = 30 * (Math.PI / 180);
-                    BABYLON.Animation.CreateAndStartAnimation(
-                        "scrollCam",
-                        camera,
-                        "alpha",
-                        60,
-                        60,
-                        camera.alpha,
-                        camera.alpha + rotationIncrement,
-                        BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT,
-                        new BABYLON.CubicEase()
-                    );
-                });
-            }
-            const linkButton = document.getElementById('linkButton');
-            if (linkButton) {
-                linkButton.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    document.body.classList.add('transition-out');
-                    setTimeout(() => {
-                        window.location.href = 'page2.html';
-                    }, 500);
-                });
-            }
-        });
-      
   </script>
 </body>
 </html>
