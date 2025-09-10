@@ -175,7 +175,20 @@
             color: #00AFD7;
             font-weight: bold;
         }
-        /* Styles des cercles supprimés */
+        .object-label {
+            position: absolute;
+            color: black;
+            background-color: rgba(255, 255, 255, 0.7);
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-family: 'Apex New', sans-serif;
+            font-size: 18px;
+            white-space: nowrap;
+            pointer-events: none; /* Pour que le texte ne bloque pas les interactions avec le canvas */
+            transform: translate(-50%, 0%); /* Centre le label par rapport à son point de positionnement */
+            z-index: 10; /* Assurez-vous qu'il est au-dessus du panorama */
+            visibility: hidden; /* Masqué par défaut */
+        }
         .actionButton {
             position: fixed;
             bottom: 20px;
@@ -285,15 +298,8 @@
             const panoFile = isSupported ? "test7.webp" : "abstract1.png";
             createPhotoDome(panoFile);
         });
-        // const circleMap = new Map(); // Supprimé
-        // function createCircle(id, text) { // Supprimé
-        //     const container = document.createElement("div");
-        //     container.id = "circle_" + id;
-        //     container.classList.add("circleContainer");
-        //     container.innerHTML = `<div class="circle"></div><div class="text-overlay">${text}</div>`;
-        //     document.body.appendChild(container);
-        //     return container;
-        // }
+
+        const objectLabelMap = new Map(); // Pour stocker les associations mesh -> div label
         const glbFiles = ["IA.glb", "socleetoiletoque2.glb", "labonumerique.glb", "bluebot.glb"];
         const customAngles = [
             0.5 * (Math.PI / 180),
@@ -302,7 +308,7 @@
             214 * (Math.PI / 180)
         ];
         const radius = 400;
-        const objectLabels = [ // Renommé pour plus de clarté
+        const objectLabels = [
             "Bienvenue",
             "Compte Sésame",
             "Intranet étudiant",
@@ -329,7 +335,7 @@
                     mesh.position.y = -190;
                 }
 
-// Modifiez la position du modèle "labonumerique.glb" pour le rapprocher du centre.
+                // Modifiez la position du modèle "labonumerique.glb" pour le rapprocher du centre.
                 if (file === "labonumerique.glb") {
                     mesh.position.x = 230;
                     mesh.position.y = -90;
@@ -340,33 +346,45 @@
                     pivot.rotation.y = customAngles[index];
                 }
                 mesh.parent = pivot;
-                // La création du cercle est supprimée ici
-                // const circle = createCircle(index + 1, objectLabels[index]);
-                // circleMap.set(mesh, circle);
+
+                // Création de l'overlay text pour chaque GLB
+                const labelDiv = document.createElement("div");
+                labelDiv.classList.add("object-label");
+                labelDiv.textContent = objectLabels[index];
+                document.body.appendChild(labelDiv);
+                objectLabelMap.set(mesh, labelDiv); // Associer le mesh au div
             });
         });
 
         engine.runRenderLoop(() => {
             scene.render();
-            // La logique de positionnement des cercles est supprimée
-            // circleMap.forEach((circle, mesh) => {
-            //     if (!mesh) return;
-            //     const worldCenter = mesh.getBoundingInfo().boundingSphere.centerWorld;
-            //     const pos = BABYLON.Vector3.Project(
-            //         worldCenter,
-            //         BABYLON.Matrix.IdentityReadOnly,
-            //         scene.getTransformMatrix(),
-            //         camera.viewport.toGlobal(engine.getRenderWidth(), engine.getRenderHeight())
-            //     );
-            //     if (pos.z >= 0 && pos.z <= 1) {
-            //         circle.style.left = `${pos.x}px`;
-            //         circle.style.top = `${pos.y}px`;
-            //         circle.style.transform = "translate(-50%, -50%)";
-            //         circle.style.visibility = "visible";
-            //     } else {
-            //         circle.style.visibility = "hidden";
-            //     }
-            // });
+            // Mettre à jour la position des labels textuels
+            objectLabelMap.forEach((labelDiv, mesh) => {
+                if (!mesh) return;
+
+                // Obtenir la position du bas du mesh dans l'espace monde
+                const boundingBox = mesh.getBoundingInfo().boundingBox;
+                const bottomCenter = new BABYLON.Vector3(
+                    (boundingBox.minimumWorld.x + boundingBox.maximumWorld.x) / 2,
+                    boundingBox.minimumWorld.y - 10, // Un petit offset pour le placer sous le modèle
+                    (boundingBox.minimumWorld.z + boundingBox.maximumWorld.z) / 2
+                );
+
+                const pos = BABYLON.Vector3.Project(
+                    bottomCenter,
+                    BABYLON.Matrix.IdentityReadOnly,
+                    scene.getTransformMatrix(),
+                    camera.viewport.toGlobal(engine.getRenderWidth(), engine.getRenderHeight())
+                );
+
+                if (pos.z >= 0 && pos.z <= 1) { // Vérifier si le mesh est dans le champ de vision
+                    labelDiv.style.left = `${pos.x}px`;
+                    labelDiv.style.top = `${pos.y}px`;
+                    labelDiv.style.visibility = "visible";
+                } else {
+                    labelDiv.style.visibility = "hidden";
+                }
+            });
         });
         window.addEventListener("resize", () => engine.resize());
         const hamburgerButton = document.getElementById('hamburger-button');
