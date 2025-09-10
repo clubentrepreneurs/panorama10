@@ -340,13 +340,8 @@
                 const pivot = new BABYLON.TransformNode("pivot_" + index, scene);
                 
                 // Positionnement des GLB sur l'équateur (y=0) à une certaine distance (radius)
-                // L'angle initial est 0 (face à la caméra), puis on ajoute l'incrément
                 let angle = index * angleIncrement;
                 
-                // Si c'est bluebot.glb (qui est le premier dans le tableau glbFiles),
-                // on veut qu'il soit directement en face de la caméra (angle 0).
-                // Les autres seront décalés de cet angle de départ.
-                // Si on a changé l'ordre, l'index 0 est bluebot.glb
                 pivot.rotation.y = angle; 
                 mesh.parent = pivot;
                 mesh.position.z = radius; // Place le mesh à 'radius' distance du pivot sur son axe Z local
@@ -470,9 +465,23 @@
                 });
             }
         });
+
         function animateCameraSpin() {
-            // Ajustez l'alpha initial pour que bluebot soit centré (0 radian)
-            camera.alpha = Math.PI; // Regarde dans la direction opposée à bluebot initialement
+            // --- DÉBUT DE LA ZONE DE MODIFICATION POUR LE DÉCALAGE GAUCHE ---
+            // Ce facteur de décalage va faire "tourner" la caméra un peu plus vers la droite
+            // ce qui aura pour effet de faire apparaître les GLB plus à gauche dans le champ de vision.
+            // Ajustez cette valeur pour contrôler l'ampleur du décalage.
+            // Math.PI / 8 équivaut à 22.5 degrés.
+            // Pour moins de décalage : diminuez la valeur (ex: Math.PI / 16)
+            // Pour plus de décalage : augmentez la valeur (ex: Math.PI / 4)
+            // Pour un décalage vers la DROITE : utilisez une valeur négative (ex: -Math.PI / 8)
+            const initialCameraAlphaOffset = Math.PI / 8; // <-- MODIFIEZ CETTE VALEUR POUR LE DÉCALAGE
+
+            // L'angle de départ de la caméra est Math.PI (180 degrés) pour centrer bluebot (qui est à l'angle 0).
+            // Nous ajoutons l'offset pour décaler la vue.
+            camera.alpha = Math.PI + initialCameraAlphaOffset; 
+            // --- FIN DE LA ZONE DE MODIFICATION POUR LE DÉCALAGE GAUCHE ---
+
             camera.beta = Math.PI / 2; // Sur l'équateur
             camera.radius = 450; // Ajustez si nécessaire pour voir tous les objets
 
@@ -482,24 +491,11 @@
                 "alpha",
                 60,
                 120, // Durée de l'animation en images
-                camera.alpha, // Commence face à bluebot
-                camera.alpha + (2 * Math.PI) / 3, // Tourne d'un tiers du cercle
+                camera.alpha, // Commence avec le nouvel alpha décalé
+                camera.alpha + (2 * Math.PI) / 3, // Et l'animation continue à partir de ce point
                 BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT,
                 new BABYLON.CubicEase()
             );
-            
-            // Pas besoin de zoomer si le radius est déjà bien ajusté
-            // BABYLON.Animation.CreateAndStartAnimation(
-            //     "cameraZoom",
-            //     camera,
-            //     "radius",
-            //     60,
-            //     120,
-            //     camera.radius * 1.2,
-            //     camera.radius,
-            //     BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT,
-            //     new BABYLON.CubicEase()
-            // );
             
             setTimeout(() => {
                 camera.attachControl(canvas, true);
