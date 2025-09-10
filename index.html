@@ -305,7 +305,7 @@
         });
 
         const objectLabelMap = new Map(); // Pour stocker les associations mesh -> div label
-        const glbFiles = ["socleetoiletoque2.glb", "labonumerique.glb", "bluebot.glb"];
+        const glbFiles = ["IA.glb", "labonumerique.glb", "bluebot.glb"];
         const customAngles = [
             0.5 * (Math.PI / 180),
             302 * (Math.PI / 180),
@@ -320,7 +320,7 @@
         ];
         const objectLinks = [
          
-            "https://clubentrepreneurs.github.io/panorama10/page3.html", // Lien pour "socleetoiletoque2.glb"
+            "https://clubentrepreneurs.github.io/panorama10/page3.html", // Lien pour "IA.glb"
             "https://clubentrepreneurs.github.io/panorama10/page4.html", // Lien pour "labonumerique.glb"
             "https://clubentrepreneurs.github.io/panorama10/page2.html"  // Lien pour "bluebot.glb"
         ];
@@ -342,16 +342,21 @@
 
                 // Modifiez la position du modèle "bluebot.glb" pour le rapprocher du centre.
                 if (file === "bluebot.glb") {
-                    mesh.position.x = -230;
+                    mesh.position.x = -140;
                     mesh.position.y = -190;
                 }
 
                 // Modifiez la position du modèle "labonumerique.glb" pour le rapprocher du centre.
                 if (file === "labonumerique.glb") {
                     mesh.position.x = 230;
-                    mesh.position.y = -90;
+                    mesh.position.y = -40;
                 }
 
+                 // Modifiez la position du modèle "labonumerique.glb" pour le rapprocher du centre.
+                if (file === "IA.glb") {
+                    mesh.position.x = 30;
+                    mesh.position.y = -90;
+                }
                 
                 if (customAngles[index] !== undefined) {
                     pivot.rotation.y = customAngles[index];
