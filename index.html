@@ -1,555 +1,567 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8" />
-    <title>GLB + panorama + menu</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-    <link href="https://fonts.cdnfonts.com/css/apex-new" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.10.2/lottie.min.js"></script>
-    <style>
-        html, body {
-            margin: 0;
-            overflow: hidden;
-            height: 100%;
-            touch-action: none;
-            background: none;
-        }
-        #renderCanvas {
-            width: 100%;
-            height: 100%;
-            display: block;
-            touch-action: none;
-            background-color: transparent !important;
-        }
-        #renderCanvas.hidden {
-            visibility: hidden;
-        }
-        #lottie-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: white;
-            z-index: 9999;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            transition: opacity 1s ease-in-out;
-        }
-        #lottie-container.fade-out {
-            opacity: 0;
-            pointer-events: none;
-        }
-        #customText {
-            position: absolute;
-            bottom: 5vh;
-            left: 50%;
-            transform: translateX(-50%);
-            font-family: 'Apex New', sans-serif;
-            font-size: clamp(24px, 4vw, 48px);
-            font-weight: heavy;
-            text-align: center;
-            color: black;
-            z-index: 2000;
-            line-height: 1.2;
-            background-color: transparent;
-            padding: 1em 2em;
-            border-radius: 0;
-            max-width: 90vw;
-            word-wrap: break-word;
-            cursor: pointer;
-            transition: font-size 0.3s ease-in-out;
-        }
-        #customText.zoomed {
-            font-size: clamp(36px, 6vw, 72px);
-            transform: translateX(-50%) scale(1.1);
-        }
-        @keyframes bounceIn {
-            0% {
-                opacity: 0;
-                transform: translate(-50%, -200%) scale(0.3);
-            }
-            60% {
-                opacity: 1;
-                transform: translate(-50%, 20%) scale(1.05);
-            }
-            80% {
-                transform: translate(-50%, -10%) scale(0.95);
-            }
-            100% {
-                transform: translate(-50%, 0) scale(1);
-            }
-        }
-        #menu-container {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            z-index: 1001;
-        }
-        #hamburger-button {
-            /* --- DÉBUT DE LA ZONE DE MODIFICATION POUR LA TAILLE DU BOUTON --- */
-            width: 60px; /* Augmenté de 40px à 60px (40 * 1.5) */
-            height: 35px; /* On garde la hauteur pour la bonne proportion des traits */
-            /* --- FIN DE LA ZONE DE MODIFICATION --- */
-            cursor: pointer;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            background: none;
-            border: none;
-            padding: 0;
-        }
-        #hamburger-button .line {
-            /* --- DÉBUT DE LA ZONE DE MODIFICATION POUR LA LONGUEUR DES TRAITS --- */
-            width: 100%; /* S'adapte à la largeur du bouton */
-            height: 6px;
-            background-color: #E5005B;
-            transition: all 0.3s ease-in-out;
-        }
-        #hamburger-button.open .line:nth-child(1) {
-            transform: translateY(14px) rotate(45deg);
-        }
-        #hamburger-button.open .line:nth-child(2) {
-            opacity: 0;
-        }
-        #hamburger-button.open .line:nth-child(3) {
-            transform: translateY(-14px) rotate(-45deg);
-        }
-        #hamburger-label {
-            position: absolute;
-            top: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            margin-top: 5px;
-            font-family: 'Apex New', sans-serif;
-            font-weight: bold;
-            color: #E5005B;
-            /* --- DÉBUT DE LA ZONE DE MODIFICATION POUR LA TAILLE DU TEXTE "MENU" --- */
-            font-size: 21px; /* Augmenté de 14px à 21px (14 * 1.5) */
-            /* --- FIN DE LA ZONE DE MODIFICATION --- */
-            white-space: nowrap;
-        }
-        #menu-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 250px;
-            height: 100%;
-            background-color: rgba(255, 255, 255, 0.9);
-            z-index: 1000;
-            transform: translateX(-100%);
-            transition: transform 0.3s ease-in-out;
-            padding: 100px 20px 20px;
-            box-shadow: 2px 0 5px rgba(0,0,0,0.5);
-            font-family: 'Apex New', sans-serif;
-            box-sizing: border-box;
-            display: flex;
-            flex-direction: column;
-        }
-        #menu-overlay.open {
-            transform: translateX(0);
-        }
-        #menu-overlay h2 {
-            font-size: 20px;
-            font-weight: bold;
-            color: #000;
-            border-bottom: 2px solid #00AFD7;
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-        #menu-overlay ul {
-            list-style: disc;
-            padding: 0 0 0 20px;
-            margin: 0;
-        }
-        #menu-overlay ul li {
-            margin-bottom: 15px;
-        }
-        #menu-overlay ul li a {
-            text-decoration: none;
-            color: black;
-            font-size: 16px;
-            font-weight: normal;
-            display: block;
-            padding: 5px 0;
-            transition: color 0.3s ease;
-        }
-        #menu-overlay ul li a:hover {
-            color: #00AFD7;
-            font-weight: bold;
-        }
-        .object-label {
-            position: absolute;
-            color: black;
-            background-color: rgba(255, 255, 255, 0.7);
-            padding: 5px 10px;
-            border-radius: 5px;
-            font-family: 'Apex New', sans-serif;
-            font-size: 18px;
-            white-space: nowrap;
-            transform: translate(-50%, 0%);
-            z-index: 10;
-            visibility: hidden;
-            cursor: pointer;
-            transition: transform 0.2s ease-in-out, background-color 0.2s ease-in-out;
-        }
-        .object-label:hover {
-            transform: translate(-50%, 0%) scale(1.05);
-            background-color: rgba(255, 255, 255, 0.9);
-        }
+    <meta charset="UTF-8" />
+    <title>GLB + panorama + menu</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <link href="https://fonts.cdnfonts.com/css/apex-new" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.10.2/lottie.min.js"></script>
+    <style>
+        html, body {
+            margin: 0;
+            overflow: hidden;
+            height: 100%;
+            touch-action: none;
+            background: none;
+        }
+        #renderCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+            touch-action: none;
+            background-color: transparent !important;
+        }
+        #renderCanvas.hidden {
+            visibility: hidden;
+        }
+        #lottie-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: white;
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 1s ease-in-out;
+        }
+        #lottie-container.fade-out {
+            opacity: 0;
+            pointer-events: none;
+        }
+        #customText {
+            position: absolute;
+            bottom: 5vh;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: 'Apex New', sans-serif;
+            font-size: clamp(24px, 4vw, 48px);
+            font-weight: heavy;
+            text-align: center;
+            color: black;
+            z-index: 2000;
+            line-height: 1.2;
+            background-color: transparent;
+            padding: 1em 2em;
+            border-radius: 0;
+            max-width: 90vw;
+            word-wrap: break-word;
+            cursor: pointer;
+            transition: font-size 0.3s ease-in-out;
+        }
+        #customText.zoomed {
+            font-size: clamp(36px, 6vw, 72px);
+            transform: translateX(-50%) scale(1.1);
+        }
+        @keyframes bounceIn {
+            0% {
+                opacity: 0;
+                transform: translate(-50%, -200%) scale(0.3);
+            }
+            60% {
+                opacity: 1;
+                transform: translate(-50%, 20%) scale(1.05);
+            }
+            80% {
+                transform: translate(-50%, -10%) scale(0.95);
+            }
+            100% {
+                transform: translate(-50%, 0) scale(1);
+            }
+        }
+        #menu-container {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1001;
+        }
+        #hamburger-button {
+            /* --- DÉBUT DE LA ZONE DE MODIFICATION POUR LA TAILLE DU BOUTON --- */
+            width: 60px; /* Augmenté de 40px à 60px (40 * 1.5) */
+            height: 35px; /* On garde la hauteur pour la bonne proportion des traits */
+            /* --- FIN DE LA ZONE DE MODIFICATION --- */
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            background: none;
+            border: none;
+            padding: 0;
+        }
+        #hamburger-button .line {
+            /* --- DÉBUT DE LA ZONE DE MODIFICATION POUR LA LONGUEUR DES TRAITS --- */
+            width: 100%; /* S'adapte à la largeur du bouton */
+            height: 6px;
+            background-color: #E5005B;
+            transition: all 0.3s ease-in-out;
+        }
+        #hamburger-button.open .line:nth-child(1) {
+            transform: translateY(14px) rotate(45deg);
+        }
+        #hamburger-button.open .line:nth-child(2) {
+            opacity: 0;
+        }
+        #hamburger-button.open .line:nth-child(3) {
+            transform: translateY(-14px) rotate(-45deg);
+        }
+        #hamburger-label {
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            margin-top: 5px;
+            font-family: 'Apex New', sans-serif;
+            font-weight: bold;
+            color: #E5005B;
+            /* --- DÉBUT DE LA ZONE DE MODIFICATION POUR LA TAILLE DU TEXTE "MENU" --- */
+            font-size: 21px; /* Augmenté de 14px à 21px (14 * 1.5) */
+            /* --- FIN DE LA ZONE DE MODIFICATION --- */
+            white-space: nowrap;
+        }
+        #menu-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 250px;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.9);
+            z-index: 1000;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease-in-out;
+            padding: 100px 20px 20px;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.5);
+            font-family: 'Apex New', sans-serif;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+        }
+        #menu-overlay.open {
+            transform: translateX(0);
+        }
+        #menu-overlay h2 {
+            font-size: 20px;
+            font-weight: bold;
+            color: #000;
+            border-bottom: 2px solid #00AFD7;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        #menu-overlay ul {
+            list-style: disc;
+            padding: 0 0 0 20px;
+            margin: 0;
+        }
+        #menu-overlay ul li {
+            margin-bottom: 15px;
+        }
+        #menu-overlay ul li a {
+            text-decoration: none;
+            color: black;
+            font-size: 16px;
+            font-weight: normal;
+            display: block;
+            padding: 5px 0;
+            transition: color 0.3s ease;
+        }
+        #menu-overlay ul li a:hover {
+            color: #00AFD7;
+            font-weight: bold;
+        }
+        .object-label {
+            position: absolute;
+            color: black;
+            background-color: rgba(255, 255, 255, 0.7);
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-family: 'Apex New', sans-serif;
+            font-size: 18px;
+            white-space: nowrap;
+            transform: translate(-50%, 0%);
+            z-index: 10;
+            visibility: hidden;
+            cursor: pointer;
+            transition: transform 0.2s ease-in-out, background-color 0.2s ease-in-out;
+        }
+        .object-label:hover {
+            transform: translate(-50%, 0%) scale(1.05);
+            background-color: rgba(255, 255, 255, 0.9);
+        }
 
 /* Plus grands sur ordinateur */
 @media (min-width: 768px) {
-  .object-label {
-    font-size: 82px;
-  }
+  .object-label {
+    font-size: 82px;
+  }
 }
 
-        
-        .actionButton {
-            position: fixed;
-            bottom: 20px;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background-color: #E5005B;
-            border: none;
-            color: white;
-            font-size: 24px;
-            cursor: pointer;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
-        }
-        #scrollButton {
-            right: 20px;
-        }
-        #linkButton {
-            right: 80px;
-            font-size: 16px;
-        }
-        body.transition-out {
-            transition: opacity 0.5s ease-in-out;
-            opacity: 0;
-        }
+        
+        .actionButton {
+            position: fixed;
+            bottom: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: #E5005B;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        #scrollButton {
+            right: 20px;
+        }
+        #linkButton {
+            right: 80px;
+            font-size: 16px;
+        }
+        body.transition-out {
+            transition: opacity 0.5s ease-in-out;
+            opacity: 0;
+        }
 
 
- /* === Augmentation des polices uniquement sur ordinateur === */
-    @media (min-width: 768px) {
-      #menu-overlay h2 {
-        font-size: 28px;
-      }
-      #menu-overlay ul li a {
-        font-size: 24px;
-      }
-      #hamburger-label {
-        font-size: 24px;
-      }
-    }
+ /* === Augmentation des polices uniquement sur ordinateur === */
+    @media (min-width: 768px) {
+      #menu-overlay h2 {
+        font-size: 28px;
+      }
+      #menu-overlay ul li a {
+        font-size: 24px;
+      }
+      #hamburger-label {
+        font-size: 24px;
+      }
+    }
 
 
-        
-    </style>
+        
+    </style>
 </head>
 <body>
-    <div id="lottie-container"></div>
-    <canvas id="renderCanvas" class="hidden"></canvas>
-    <div id="customText">
-        <br>
-    </div>
-    
-    <div id="menu-container">
-        <button id="hamburger-button">
-            <span class="line"></span>
-            <span class="line"></span>
-            <span class="line"></span>
-        </button>
-        <span id="hamburger-label">MENU</span>
-    </div>
-    
-    <div id="menu-overlay">
-        <h2>Toutes vos ressources pour réussir à l'Université</h2>
-        <ul>
-            <li><a href="indexsansjson.html">Page d'accueil</a></li>
-            <li><a href="page2.html">Vidéos "Réussir votre rentrée 2025"</a></li>
-            <li><a href="page3.html">Outils IA d'aide à la réussite</a></li>
-            <li><a href="page4.html">Le laboratoire numérique : boostez votre réussite grâce à vos compétences!</a></li>
-        </ul>
-    </div>
-    <button id="scrollButton" class="actionButton">
-        &#x21bb; </button>
-    
-    <script src="https://cdn.babylonjs.com/babylon.js"></script>
-    <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
-    <script>
-        const canvas = document.getElementById("renderCanvas");
-        const engine = new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true, alpha: true });
-        const scene = new BABYLON.Scene(engine);
-        scene.clearColor = new BABYLON.Color4(0, 0, 0, 0);
-        
-        // Ajustez la position de la caméra pour mieux englober les objets
-        // L'angle alpha initial sera ajusté pour pointer vers bluebot.glb
-        // beta à Math.PI / 2 place la caméra sur l'équateur (pas de hauteur verticale)
-        const camera = new BABYLON.ArcRotateCamera("cam", Math.PI / 2, Math.PI / 2, 450, new BABYLON.Vector3(0, 0, 0), scene);
-        camera.attachControl(canvas, true);
-        camera.inputs.clear();
-        new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0,1,0), scene);
-        let panoLoaded = false;
+    <div id="lottie-container"></div>
+    <canvas id="renderCanvas" class="hidden"></canvas>
+    <div id="customText">
+        <br>
+    </div>
+    
+    <div id="menu-container">
+        <button id="hamburger-button">
+            <span class="line"></span>
+            <span class="line"></span>
+            <span class="line"></span>
+        </button>
+        <span id="hamburger-label">MENU</span>
+    </div>
+    
+    <div id="menu-overlay">
+        <h2>Toutes vos ressources pour réussir à l'Université</h2>
+        <ul>
+            <li><a href="indexsansjson.html">Page d'accueil</a></li>
+            <li><a href="page2.html">Vidéos "Réussir votre rentrée 2025"</a></li>
+            <li><a href="page3.html">Outils IA d'aide à la réussite</a></li>
+            <li><a href="page4.html">Le laboratoire numérique : boostez votre réussite grâce à vos compétences!</a></li>
+        </ul>
+    </div>
+    <button id="scrollButton" class="actionButton">
+        &#x21bb; </button>
+    
+    <script src="https://cdn.babylonjs.com/babylon.js"></script>
+    <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+    <script>
+        const canvas = document.getElementById("renderCanvas");
+        const engine = new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true, alpha: true });
+        const scene = new BABYLON.Scene(engine);
+        scene.clearColor = new BABYLON.Color4(0, 0, 0, 0);
+        
+        // Ajustez la position de la caméra pour mieux englober les objets
+        // L'angle alpha initial sera ajusté pour pointer vers bluebot.glb
+        // beta à Math.PI / 2 place la caméra sur l'équateur (pas de hauteur verticale)
+        const camera = new BABYLON.ArcRotateCamera("cam", Math.PI / 2, Math.PI / 2, 450, new BABYLON.Vector3(0, 0, 0), scene);
+        camera.attachControl(canvas, true);
+        camera.inputs.clear();
+        new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0,1,0), scene);
+        let panoLoaded = false;
 
-        function supportsWebP(callback) {
-            const img = new Image();
-            img.onload = () => callback(img.width > 0 && img.height > 0);
-            img.onerror = () => callback(false);
-            img.src = "data:image/webp;base64,UklGRiIAAABXRUJQVlA4TCEAAAAvAAAAAA...";
-        }
-        function createPhotoDome(panoFile) {
-            const dome = new BABYLON.PhotoDome("panorama", panoFile + "?v=" + Date.now(), { resolution: 32, size: 1000 }, scene);
-            dome.imageMode = BABYLON.PhotoDome.MODE_MONOSCOPIC;
-            dome.onReady = () => {
-                panoLoaded = true;
-                checkAndStartPanoramaIntro();
-            };
-            const domeMat = dome.mesh.material;
-            if (panoFile.endsWith(".jpg") || panoFile.endsWith(".jpeg")) {
-                domeMat.diffuseTexture.hasAlpha = false;
-                domeMat.useAlphaFromDiffuseTexture = false;
-                domeMat.transparencyMode = BABYLON.Material.MATERIAL_OPAQUE;
-            } else {
-                domeMat.diffuseTexture.hasAlpha = true;
-                domeMat.useAlphaFromDiffuseTexture = true;
-                domeMat.transparencyMode = BABYLON.Material.MATERIAL_ALPHABLEND;
-                domeMat.backFaceCulling = false;
-                domeMat.needDepthPrePass = true;
-            }
-        }
-        let lottieAnimationComplete = false;
-        function checkAndStartPanoramaIntro() {
-            if (panoLoaded && lottieAnimationComplete) {
-                canvas.classList.remove('hidden');
-                animateCameraSpin();
-            }
-        }
-        supportsWebP((isSupported) => {
-            const panoFile = isSupported ? "test7.webp" : "abstract1.png";
-            createPhotoDome(panoFile);
-        });
+        function supportsWebP(callback) {
+            const img = new Image();
+            img.onload = () => callback(img.width > 0 && img.height > 0);
+            img.onerror = () => callback(false);
+            img.src = "data:image/webp;base64,UklGRiIAAABXRUJQVlA4TCEAAAAvAAAAAA...";
+        }
+        function createPhotoDome(panoFile) {
+            const dome = new BABYLON.PhotoDome("panorama", panoFile + "?v=" + Date.now(), { resolution: 32, size: 1000 }, scene);
+            dome.imageMode = BABYLON.PhotoDome.MODE_MONOSCOPIC;
+            dome.onReady = () => {
+                panoLoaded = true;
+                checkAndStartPanoramaIntro();
+            };
+            const domeMat = dome.mesh.material;
+            if (panoFile.endsWith(".jpg") || panoFile.endsWith(".jpeg")) {
+                domeMat.diffuseTexture.hasAlpha = false;
+                domeMat.useAlphaFromDiffuseTexture = false;
+                domeMat.transparencyMode = BABYLON.Material.MATERIAL_OPAQUE;
+            } else {
+                domeMat.diffuseTexture.hasAlpha = true;
+                domeMat.useAlphaFromDiffuseTexture = true;
+                domeMat.transparencyMode = BABYLON.Material.MATERIAL_ALPHABLEND;
+                domeMat.backFaceCulling = false;
+                domeMat.needDepthPrePass = true;
+            }
+        }
+        let lottieAnimationComplete = false;
+        function checkAndStartPanoramaIntro() {
+            if (panoLoaded && lottieAnimationComplete) {
+                canvas.classList.remove('hidden');
+                animateCameraSpin();
+            }
+        }
+        supportsWebP((isSupported) => {
+            const panoFile = isSupported ? "test7.webp" : "abstract1.png";
+            createPhotoDome(panoFile);
+        });
 
-        const objectLabelMap = new Map();
-        const glbFiles = ["bluebot.glb", "IA.glb", "labonumerique.glb"]; // Ordre ajusté pour centrer bluebot
-        const objectLabels = [
-            "Réussir sa rentrée", // Label pour "bluebot.glb"
-            "Outils IA d'aide à la réussite", // Label pour "IA.glb"
-            "Le laboratoire numérique des compétences" // Label pour "labonumerique.glb"
-        ];
-        const objectLinks = [
-            "https://clubentrepreneurs.github.io/panorama10/page2.html",  // Lien pour "bluebot.glb"
-            "https://clubentrepreneurs.github.io/panorama10/page3.html", // Lien pour "IA.glb"
-            "https://clubentrepreneurs.github.io/panorama10/page4.html" // Lien pour "labonumerique.glb"
-        ];
+        const objectLabelMap = new Map();
+        // --- DÉBUT DE LA MODIFICATION: AJOUT DE TEXTE.GLB ---
+        const glbFiles = ["bluebot.glb", "texte.glb", "IA.glb", "labonumerique.glb"]; // Ajouter texte.glb
+        const objectLabels = [
+            "Réussir sa rentrée",
+            "texte.glb", // Un label temporaire ou final pour votre nouveau modèle
+            "Outils IA d'aide à la réussite",
+            "Le laboratoire numérique des compétences"
+        ];
+        const objectLinks = [
+            "https://clubentrepreneurs.github.io/panorama10/page2.html",
+            "#", // Un lien temporaire pour le nouveau modèle
+            "https://clubentrepreneurs.github.io/panorama10/page3.html",
+            "https://clubentrepreneurs.github.io/panorama10/page4.html"
+        ];
+        // --- FIN DE LA MODIFICATION ---
 
-        const radius = 400; // Rayon de placement des GLB autour du centre
-        const angleIncrement = (2 * Math.PI) / glbFiles.length; // 120 degrés en radians
+        const radius = 400;
+        const angleIncrement = (2 * Math.PI) / (glbFiles.length - 1); // Moins un, car bluebot et texte sont groupés
+        let currentAngleIndex = 0; // Pour suivre l'angle des modèles non-groupés
 
-        glbFiles.forEach((file, index) => {
-            BABYLON.SceneLoader.ImportMesh("", "./", file, scene, function(meshes, particleSystems, skeletons, animationGroups) {
-                if (!meshes || meshes.length === 0) {
-                    console.warn(`Aucun mesh trouvé dans ${file}.`);
-                    return;
-                }
-                const mesh = meshes[0];
-                if (animationGroups) {
-                    animationGroups.forEach(ag => ag.start(true));
-                }
-                
-                // Échelle de base pour tous les modèles
-                mesh.scaling = new BABYLON.Vector3(50, 50, 50);
+        glbFiles.forEach((file, index) => {
+            BABYLON.SceneLoader.ImportMesh("", "./", file, scene, function(meshes, particleSystems, skeletons, animationGroups) {
+                if (!meshes || meshes.length === 0) {
+                    console.warn(`Aucun mesh trouvé dans ${file}.`);
+                    return;
+                }
+                const mesh = meshes[0];
+                if (animationGroups) {
+                    animationGroups.forEach(ag => ag.start(true));
+                }
+                
+                // Échelle de base pour tous les modèles
+                mesh.scaling = new BABYLON.Vector3(50, 50, 50);
 
-                // --- DÉBUT DE LA ZONE DE MODIFICATION POUR LA TAILLE ET LA POSITION Y DE LABONUMERIQUE.GLB ---
-                if (file === "labonumerique.glb") {
-                    // Doubler la taille du modèle (facteur 2.0)
-                    const scaleFactor = 2.0; // <<< Changé à 2.0 pour doubler la taille
-                    mesh.scaling.x *= scaleFactor;
-                    mesh.scaling.y *= scaleFactor;
-                    mesh.scaling.z *= scaleFactor;
+                // --- DÉBUT DE LA ZONE DE MODIFICATION POUR LE POSITIONNEMENT ---
+                let pivot = null;
+                if (file === "bluebot.glb" || file === "texte.glb") {
+                    // Utilisez un pivot commun pour bluebot et texte
+                    const bluebotPivot = scene.getTransformNodeByName("pivot_bluebot") || new BABYLON.TransformNode("pivot_bluebot", scene);
+                    bluebotPivot.rotation.y = 0;
+                    mesh.parent = bluebotPivot;
+                    
+                    if (file === "bluebot.glb") {
+                        mesh.position.y = -190;
+                        mesh.position.z = radius;
+                    } else if (file === "texte.glb") {
+                        // Position relative à bluebot.glb (déjà enfant du même pivot)
+                        // Positionnement au-dessus (Y) et à droite (X) de bluebot
+                        mesh.position.y = -100; // Ajuster la hauteur, par exemple 90 unités au-dessus de bluebot
+                        mesh.position.x = 80; // Ajuster le décalage à droite, par exemple 80 unités
+                        mesh.position.z = radius;
+                        // Optionnel : si le texte est trop grand, réduisez-le
+                        mesh.scaling = new BABYLON.Vector3(30, 30, 30); // Réduire la taille
+                    }
+                    pivot = bluebotPivot;
+                } else {
+                    // Pour les autres GLB, utiliser le positionnement original
+                    pivot = new BABYLON.TransformNode("pivot_" + index, scene);
+                    pivot.rotation.y = angleIncrement * (currentAngleIndex + 1);
+                    mesh.parent = pivot;
+                    mesh.position.z = radius;
+                    currentAngleIndex++;
+                    if (file === "IA.glb") {
+                        mesh.position.y = -90;
+                    } else if (file === "labonumerique.glb") {
+                        const scaleFactor = 2.0;
+                        mesh.scaling.x *= scaleFactor;
+                        mesh.scaling.y *= scaleFactor;
+                        mesh.scaling.z *= scaleFactor;
+                        mesh.position.y = -120;
+                    }
+                }
+                // --- FIN DE LA MODIFICATION ---
 
-                    // Descendre le modèle un peu plus bas verticalement.
-                    // Une valeur plus négative fait descendre le modèle. Ajustez si besoin.
-                    mesh.position.y = -120; // <<< Valeur ajustée pour le descendre
-                }
-                // --- FIN DE LA ZONE DE MODIFICATION ---
 
-                // Créez un TransformNode comme pivot pour chaque GLB
-                const pivot = new BABYLON.TransformNode("pivot_" + index, scene);
-                
-                // Positionnement des GLB sur l'équateur (y=0) à une certaine distance (radius)
-                let angle = index * angleIncrement;
-                
-                pivot.rotation.y = angle; 
-                mesh.parent = pivot;
-                mesh.position.z = radius; // Place le mesh à 'radius' distance du pivot sur son axe Z local
+                // Création de l'overlay text pour chaque GLB
+                const labelDiv = document.createElement("div");
+                labelDiv.classList.add("object-label");
+                labelDiv.textContent = objectLabels[index];
+                document.body.appendChild(labelDiv);
+                objectLabelMap.set(mesh, labelDiv);
 
-                // Ajustements spécifiques pour chaque mesh pour qu'ils soient sur le "sol"
-                // ou à la bonne hauteur relative à leur base.
-                // Ces valeurs peuvent nécessiter des ajustements précis en fonction des modèles GLB eux-mêmes.
-                if (file === "bluebot.glb") {
-                    mesh.position.y = -190; 
-                } else if (file === "IA.glb") {
-                    mesh.position.y = -90; 
-                } 
-                // La modification pour labonumerique.glb est maintenant dans le bloc "if (file === 'labonumerique.glb')" ci-dessus.
+                // Ajouter le gestionnaire de clic si un lien est défini
+                if (objectLinks[index] && objectLinks[index] !== '#') {
+                    labelDiv.addEventListener('click', () => {
+                        document.body.classList.add('transition-out');
+                        setTimeout(() => {
+                            window.location.href = objectLinks[index];
+                        }, 500);
+                    });
+                }
+            });
+        });
 
-                // Création de l'overlay text pour chaque GLB
-                const labelDiv = document.createElement("div");
-                labelDiv.classList.add("object-label");
-                labelDiv.textContent = objectLabels[index];
-                document.body.appendChild(labelDiv);
-                objectLabelMap.set(mesh, labelDiv);
+        engine.runRenderLoop(() => {
+            scene.render();
+            // Mettre à jour la position des labels textuels
+            objectLabelMap.forEach((labelDiv, mesh) => {
+                if (!mesh) return;
 
-                // Ajouter le gestionnaire de clic si un lien est défini
-                if (objectLinks[index]) {
-                    labelDiv.addEventListener('click', () => {
-                        document.body.classList.add('transition-out');
-                        setTimeout(() => {
-                            window.location.href = objectLinks[index];
-                        }, 500);
-                    });
-                }
-            });
-        });
+                // Obtenir la position du bas du mesh dans l'espace monde
+                const boundingBox = mesh.getBoundingInfo().boundingBox;
+                const bottomCenter = new BABYLON.Vector3(
+                    (boundingBox.minimumWorld.x + boundingBox.maximumWorld.x) / 2,
+                    boundingBox.minimumWorld.y - 10, // Un petit offset pour le placer sous le modèle
+                    (boundingBox.minimumWorld.z + boundingBox.maximumWorld.z) / 2
+                );
 
-        engine.runRenderLoop(() => {
-            scene.render();
-            // Mettre à jour la position des labels textuels
-            objectLabelMap.forEach((labelDiv, mesh) => {
-                if (!mesh) return;
+                const pos = BABYLON.Vector3.Project(
+                    bottomCenter,
+                    BABYLON.Matrix.IdentityReadOnly,
+                    scene.getTransformMatrix(),
+                    camera.viewport.toGlobal(engine.getRenderWidth(), engine.getRenderHeight())
+                );
 
-                // Obtenir la position du bas du mesh dans l'espace monde
-                const boundingBox = mesh.getBoundingInfo().boundingBox;
-                const bottomCenter = new BABYLON.Vector3(
-                    (boundingBox.minimumWorld.x + boundingBox.maximumWorld.x) / 2,
-                    boundingBox.minimumWorld.y - 10, // Un petit offset pour le placer sous le modèle
-                    (boundingBox.minimumWorld.z + boundingBox.maximumWorld.z) / 2
-                );
+                if (pos.z >= 0 && pos.z <= 1) { // Vérifier si le mesh est dans le champ de vision
+                    labelDiv.style.left = `${pos.x}px`;
+                    labelDiv.style.top = `${pos.y}px`;
+                    labelDiv.style.visibility = "visible";
+                } else {
+                    labelDiv.style.visibility = "hidden";
+                }
+            });
+        });
+        window.addEventListener("resize", () => engine.resize());
+        const hamburgerButton = document.getElementById('hamburger-button');
+        const menuOverlay = document.getElementById('menu-overlay');
+        hamburgerButton.addEventListener('click', () => {
+            hamburgerButton.classList.toggle('open');
+            menuOverlay.classList.toggle('open');
+        });
+        const customText = document.getElementById("customText");
+        customText.addEventListener("click", () => {
+            customText.classList.toggle("zoomed");
+        });
+        document.addEventListener("DOMContentLoaded", () => {
+            const lottieContainer = document.getElementById('lottie-container');
+            const anim = lottie.loadAnimation({
+                container: lottieContainer,
+                renderer: 'svg',
+                loop: false,
+                autoplay: true,
+                path: 'intro.json',
+                rendererSettings: {
+                    preserveAspectRatio: 'xMidYMid slice'
+                }
+            });
+            anim.addEventListener('complete', () => {
+                lottieAnimationComplete = true;
+                lottieContainer.classList.add('fade-out');
+                setTimeout(() => {
+                    lottieContainer.style.display = 'none';
+                }, 1000);
+                checkAndStartPanoramaIntro();
+            });
+            const scrollButton = document.getElementById('scrollButton');
+            if (scrollButton) {
+                scrollButton.addEventListener('click', () => {
+                    const rotationIncrement = 30 * (Math.PI / 180);
+                    BABYLON.Animation.CreateAndStartAnimation(
+                        "scrollCam",
+                        camera,
+                        "alpha",
+                        60,
+                        60,
+                        camera.alpha,
+                        camera.alpha + rotationIncrement,
+                        BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT,
+                        new BABYLON.CubicEase()
+                    );
+                });
+            }
+            const linkButton = document.getElementById('linkButton');
+            if (linkButton) {
+                linkButton.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    document.body.classList.add('transition-out');
+                    setTimeout(() => {
+                        window.location.href = 'page2.html';
+                    }, 500);
+                });
+            }
+        });
 
-                const pos = BABYLON.Vector3.Project(
-                    bottomCenter,
-                    BABYLON.Matrix.IdentityReadOnly,
-                    scene.getTransformMatrix(),
-                    camera.viewport.toGlobal(engine.getRenderWidth(), engine.getRenderHeight())
-                );
+        function animateCameraSpin() {
+            // --- DÉBUT DE LA ZONE DE MODIFICATION POUR LE DÉCALAGE DROITE ---
+            // Ce facteur de décalage va faire "tourner" la caméra un peu plus vers la gauche
+            // ce qui aura pour effet de faire apparaître les GLB plus à droite dans le champ de vision.
+            // Pour décaler les GLB vers la DROITE, nous utilisons une valeur NÉGATIVE pour l'offset.
+            // Ajustez la valeur absolue pour contrôler l'ampleur du décalage.
+            // -Math.PI / 8 équivaut à -22.5 degrés.
+            // Pour moins de décalage : diminuez la valeur absolue (ex: -Math.PI / 16)
+            // Pour plus de décalage : augmentez la valeur absolue (ex: -Math.PI / 4)
+            const initialCameraAlphaOffset = -Math.PI / 8; // <-- MODIFIEZ CETTE VALEUR POUR LE DÉCALAGE
 
-                if (pos.z >= 0 && pos.z <= 1) { // Vérifier si le mesh est dans le champ de vision
-                    labelDiv.style.left = `${pos.x}px`;
-                    labelDiv.style.top = `${pos.y}px`;
-                    labelDiv.style.visibility = "visible";
-                } else {
-                    labelDiv.style.visibility = "hidden";
-                }
-            });
-        });
-        window.addEventListener("resize", () => engine.resize());
-        const hamburgerButton = document.getElementById('hamburger-button');
-        const menuOverlay = document.getElementById('menu-overlay');
-        hamburgerButton.addEventListener('click', () => {
-            hamburgerButton.classList.toggle('open');
-            menuOverlay.classList.toggle('open');
-        });
-        const customText = document.getElementById("customText");
-        customText.addEventListener("click", () => {
-            customText.classList.toggle("zoomed");
-        });
-        document.addEventListener("DOMContentLoaded", () => {
-            const lottieContainer = document.getElementById('lottie-container');
-            const anim = lottie.loadAnimation({
-                container: lottieContainer,
-                renderer: 'svg',
-                loop: false,
-                autoplay: true,
-                path: 'intro.json',
-                rendererSettings: {
-                    preserveAspectRatio: 'xMidYMid slice'
-                }
-            });
-            anim.addEventListener('complete', () => {
-                lottieAnimationComplete = true;
-                lottieContainer.classList.add('fade-out');
-                setTimeout(() => {
-                    lottieContainer.style.display = 'none';
-                }, 1000);
-                checkAndStartPanoramaIntro();
-            });
-            const scrollButton = document.getElementById('scrollButton');
-            if (scrollButton) {
-                scrollButton.addEventListener('click', () => {
-                    const rotationIncrement = 30 * (Math.PI / 180);
-                    BABYLON.Animation.CreateAndStartAnimation(
-                        "scrollCam",
-                        camera,
-                        "alpha",
-                        60,
-                        60,
-                        camera.alpha,
-                        camera.alpha + rotationIncrement,
-                        BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT,
-                        new BABYLON.CubicEase()
-                    );
-                });
-            }
-            const linkButton = document.getElementById('linkButton');
-            if (linkButton) {
-                linkButton.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    document.body.classList.add('transition-out');
-                    setTimeout(() => {
-                        window.location.href = 'page2.html';
-                    }, 500);
-                });
-            }
-        });
+            // L'angle de départ de la caméra est Math.PI (180 degrés) pour centrer bluebot (qui est à l'angle 0).
+            // Nous SOUSTRAYONS (ou ajoutons une valeur négative) l'offset pour décaler la vue vers la gauche,
+            // ce qui fait apparaître les objets plus à droite.
+            camera.alpha = Math.PI + initialCameraAlphaOffset; 
+            // --- FIN DE LA ZONE DE MODIFICATION POUR LE DÉCALAGE DROITE ---
 
-        function animateCameraSpin() {
-            // --- DÉBUT DE LA ZONE DE MODIFICATION POUR LE DÉCALAGE DROITE ---
-            // Ce facteur de décalage va faire "tourner" la caméra un peu plus vers la gauche
-            // ce qui aura pour effet de faire apparaître les GLB plus à droite dans le champ de vision.
-            // Pour décaler les GLB vers la DROITE, nous utilisons une valeur NÉGATIVE pour l'offset.
-            // Ajustez la valeur absolue pour contrôler l'ampleur du décalage.
-            // -Math.PI / 8 équivaut à -22.5 degrés.
-            // Pour moins de décalage : diminuez la valeur absolue (ex: -Math.PI / 16)
-            // Pour plus de décalage : augmentez la valeur absolue (ex: -Math.PI / 4)
-            const initialCameraAlphaOffset = -Math.PI / 8; // <-- MODIFIEZ CETTE VALEUR POUR LE DÉCALAGE
+            camera.beta = Math.PI / 2; // Sur l'équateur
+            camera.radius = 450; // Ajustez si nécessaire pour voir tous les objets
 
-            // L'angle de départ de la caméra est Math.PI (180 degrés) pour centrer bluebot (qui est à l'angle 0).
-            // Nous SOUSTRAYONS (ou ajoutons une valeur négative) l'offset pour décaler la vue vers la gauche,
-            // ce qui fait apparaître les objets plus à droite.
-            camera.alpha = Math.PI + initialCameraAlphaOffset; 
-            // --- FIN DE LA ZONE DE MODIFICATION POUR LE DÉCALAGE DROITE ---
-
-            camera.beta = Math.PI / 2; // Sur l'équateur
-            camera.radius = 450; // Ajustez si nécessaire pour voir tous les objets
-
-            BABYLON.Animation.CreateAndStartAnimation(
-                "cameraSpin",
-                camera,
-                "alpha",
-                60,
-                120, // Durée de l'animation en images
-                camera.alpha, // Commence avec le nouvel alpha décalé
-                camera.alpha + (2 * Math.PI) / 3, // Et l'animation continue à partir de ce point
-                BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT,
-                new BABYLON.CubicEase()
-            );
-            
-            setTimeout(() => {
-                camera.attachControl(canvas, true);
-                camera.inputs.add(new BABYLON.ArcRotateCameraPointersInput());
-                camera.inputs.add(new BABYLON.ArcRotateCameraKeyboardInput());
-            }, 2000); // Assurez-vous que c'est après l'animation
-        }
-    </script>
+            BABYLON.Animation.CreateAndStartAnimation(
+                "cameraSpin",
+                camera,
+                "alpha",
+                60,
+                120, // Durée de l'animation en images
+                camera.alpha, // Commence avec le nouvel alpha décalé
+                camera.alpha + (2 * Math.PI) / 3, // Et l'animation continue à partir de ce point
+                BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT,
+                new BABYLON.CubicEase()
+            );
+            
+            setTimeout(() => {
+                camera.attachControl(canvas, true);
+                camera.inputs.add(new BABYLON.ArcRotateCameraPointersInput());
+                camera.inputs.add(new BABYLON.ArcRotateCameraKeyboardInput());
+            }, 2000); // Assurez-vous que c'est après l'animation
+        }
+    </script>
 </body>
 </html>
