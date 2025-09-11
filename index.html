@@ -397,11 +397,11 @@
         // --- DÉBUT DE LA ZONE AJOUTÉE : CHARGEMENT DU QUATRIÈME GLB ---
         const independentGLBFile = "texte.glb";
         const independentGLBparams = {
-            position: new BABYLON.Vector3(900, -100, 150),
+            position: new BABYLON.Vector3(0, -100, -400),
             rotationY: Math.PI,
             scaling: new BABYLON.Vector3(150, 150, 150)
         };
-
+        
         BABYLON.SceneLoader.ImportMesh("", "./", independentGLBFile, scene, function(meshes, particleSystems, skeletons, animationGroups) {
             if (!meshes || meshes.length === 0) {
                 console.warn(`Aucun mesh trouvé dans ${independentGLBFile}.`);
@@ -411,11 +411,22 @@
             if (animationGroups) {
                 animationGroups.forEach(ag => ag.start(true));
             }
+            
+            // On positionne le mesh en fonction de la position de Bluebot
+            // Bluebot est le premier élément du tableau glbFiles (index 0)
+            const bluebotInitialPos = new BABYLON.Vector3(0, -190, 400); // Position initiale de bluebot
 
-            // Appliquer les paramètres de position, rotation et échelle
-            mesh.position = independentGLBparams.position;
-            mesh.rotation.y = independentGLBparams.rotationY;
-            mesh.scaling = independentGLBparams.scaling;
+            // Ajustements par rapport à bluebot
+            const yOffset = 100; // Hauteur au-dessus de bluebot
+            const zOffset = 50;  // Décalage en profondeur (pour ne pas être superposé)
+
+            mesh.position.x = bluebotInitialPos.x;
+            mesh.position.y = bluebotInitialPos.y + yOffset;
+            mesh.position.z = bluebotInitialPos.z + zOffset;
+            
+            // Rotation et mise à l'échelle
+            mesh.rotation.y = Math.PI; // Pour le faire faire face à la caméra
+            mesh.scaling = new BABYLON.Vector3(150, 150, 150);
         });
         // --- FIN DE LA ZONE AJOUTÉE ---
 
