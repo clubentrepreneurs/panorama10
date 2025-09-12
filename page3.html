@@ -1,50 +1,384 @@
-Voici un calendrier éditorial détaillé sur 3 mois pour le Pôle Accompagnement à la réussite des étudiants, basé sur la logique des capsules vidéos de 30 secondes.
-L’idée : proposer 1 vidéo par semaine, en variant les thématiques, pour créer une série rythmée et équilibrée.
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <title>PNG + panorama + menu</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <link href="https://fonts.cdnfonts.com/css/apex-new" rel="stylesheet">
+    <style>
+        html, body {
+            margin: 0;
+            overflow: hidden;
+            height: 100%;
+            touch-action: none;
+            background: none;
+        }
+        #renderCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+            touch-action: none;
+            background-color: transparent !important;
+        }
+        #customText {
+            position: absolute;
+            bottom: 5vh;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: 'Apex New', sans-serif;
+            font-size: clamp(24px, 4vw, 48px);
+            font-weight: heavy;
+            text-align: center;
+            color: black;
+            z-index: 2000;
+            line-height: 1.2;
+            background-color: transparent;
+            padding: 1em 2em;
+            border-radius: 0;
+            max-width: 90vw;
+            word-wrap: break-word;
+            cursor: pointer;
+            transition: font-size 0.3s ease-in-out;
+        }
+        #customText.zoomed {
+            font-size: clamp(36px, 6vw, 72px);
+            transform: translateX(-50%) scale(1.1);
+        }
+        @keyframes bounceIn {
+            0% {
+                opacity: 0;
+                transform: translate(-50%, -200%) scale(0.3);
+            }
+            60% {
+                opacity: 1;
+                transform: translate(-50%, 20%) scale(1.05);
+            }
+            80% {
+                transform: translate(-50%, -10%) scale(0.95);
+            }
+            100% {
+                transform: translate(-50%, 0) scale(1);
+            }
+        }
+        #menu-container {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1001;
+        }
+        #hamburger-button {
+            width: 60px;
+            height: 35px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            background: none;
+            border: none;
+            padding: 0;
+        }
+        #hamburger-button .line {
+            width: 100%;
+            height: 6px;
+            background-color: #E5005B;
+            transition: all 0.3s ease-in-out;
+        }
+        #hamburger-button.open .line:nth-child(1) {
+            transform: translateY(14px) rotate(45deg);
+        }
+        #hamburger-button.open .line:nth-child(2) {
+            opacity: 0;
+        }
+        #hamburger-button.open .line:nth-child(3) {
+            transform: translateY(-14px) rotate(-45deg);
+        }
+        #hamburger-label {
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            margin-top: 5px;
+            font-family: 'Apex New', sans-serif;
+            font-weight: bold;
+            color: #E5005B;
+            font-size: 21px;
+            white-space: nowrap;
+        }
+        #menu-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 250px;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.9);
+            z-index: 1000;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease-in-out;
+            padding: 100px 20px 20px;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.5);
+            font-family: 'Apex New', sans-serif;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+        }
+        #menu-overlay.open {
+            transform: translateX(0);
+        }
+        #menu-overlay h2 {
+            font-size: 20px;
+            font-weight: bold;
+            color: #000;
+            border-bottom: 2px solid #00AFD7;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        #menu-overlay ul {
+            list-style: disc;
+            padding: 0 0 0 20px;
+            margin: 0;
+        }
+        #menu-overlay ul li {
+            margin-bottom: 15px;
+        }
+        #menu-overlay ul li a {
+            text-decoration: none;
+            color: black;
+            font-size: 16px;
+            font-weight: normal;
+            display: block;
+            padding: 5px 0;
+            transition: color 0.3s ease;
+        }
+        #menu-overlay ul li a:hover {
+            color: #00AFD7;
+            font-weight: bold;
+        }
+        .object-label {
+            position: absolute;
+            color: black;
+            background-color: rgba(255, 255, 255, 0.7);
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-family: 'Apex New', sans-serif;
+            font-size: 18px;
+            white-space: nowrap;
+            transform: translate(-50%, 0%);
+            z-index: 10;
+            visibility: hidden;
+            cursor: pointer;
+            transition: transform 0.2s ease-in-out, background-color 0.2s ease-in-out;
+        }
+        @media (min-width: 768px) {
+            .object-label {
+                font-size: 82px;
+            }
+        }
+        .object-label:hover {
+            transform: translate(-50%, 0%) scale(1.05);
+            background-color: rgba(255, 255, 255, 0.9);
+        }
+        .actionButton {
+            position: fixed;
+            bottom: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: #E5005B;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        #scrollButton {
+            right: 20px;
+        }
+        #linkButton {
+            right: 80px;
+            font-size: 16px;
+        }
+        body.transition-out {
+            transition: opacity 0.5s ease-in-out;
+            opacity: 0;
+        }
+        @media (min-width: 768px) {
+            #menu-overlay h2 {
+                font-size: 28px;
+            }
+            #menu-overlay ul li a {
+                font-size: 24px;
+            }
+            #hamburger-label {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="renderCanvas"></canvas>
+    <div id="customText">
+        <br>
+    </div>
+    
+    <div id="menu-container">
+        <button id="hamburger-button">
+            <span class="line"></span>
+            <span class="line"></span>
+            <span class="line"></span>
+        </button>
+        <span id="hamburger-label">MENU</span>
+    </div>
+    
+    <div id="menu-overlay">
+        <h2>Toutes vos ressources pour réussir à l'Université</h2>
+        <ul>
+            <li><a href="indexsansjson.html">Page d'accueil</a></li>
+            <li><a href="page2.html">Vidéos "Réussir votre rentrée 2025"</a></li>
+            <li><a href="page3.html">Outils IA d'aide à la réussite</a></li>
+            <li><a href="page4.html">Le laboratoire numérique : boostez votre réussite grâce à vos compétences!</a></li>
+        </ul>
+    </div>
+    <button id="scrollButton" class="actionButton">
+        &#x21bb; </button>
+    
+    <script src="https://cdn.babylonjs.com/babylon.js"></script>
+    <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+    <script>
+        const canvas = document.getElementById("renderCanvas");
+        const engine = new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true, alpha: true });
+        const scene = new BABYLON.Scene(engine);
+        scene.clearColor = new BABYLON.Color4(0, 0, 0, 0);
+        
+        const camera = new BABYLON.ArcRotateCamera("cam", Math.PI / 2, Math.PI / 2, 450, new BABYLON.Vector3(0, 0, 0), scene);
+        camera.attachControl(canvas, true);
+        camera.inputs.clear();
+        new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
+        let panoLoaded = false;
+        let surmonterImage;
 
-📅 Calendrier éditorial – 3 mois (12 semaines)
-🔵 Mois 1 : « Découvrir les bases »
-🎯 Objectif : attirer l’attention des étudiants avec des conseils simples, concrets, immédiatement utiles.
+        function supportsWebP(callback) {
+            const img = new Image();
+            img.onload = () => callback(img.width > 0 && img.height > 0);
+            img.onerror = () => callback(false);
+            img.src = "data:image/webp;base64,UklGRiIAAABXRUJQVlA4TCEAAAAvAAAAAA...";
+        }
 
-Semaine 1 – Soft skills : « Comment capter l’attention en 10 secondes lors d’un entretien »
+        function createPhotoDome(panoFile) {
+            const dome = new BABYLON.PhotoDome("panorama", panoFile + "?v=" + Date.now(), { resolution: 32, size: 1000 }, scene);
+            dome.imageMode = BABYLON.PhotoDome.MODE_MONOSCOPIC;
+            dome.onReady = () => {
+                panoLoaded = true;
+                animateCameraSpin();
+            };
+            const domeMat = dome.mesh.material;
+            if (panoFile.endsWith(".jpg") || panoFile.endsWith(".jpeg")) {
+                domeMat.diffuseTexture.hasAlpha = false;
+                domeMat.useAlphaFromDiffuseTexture = false;
+                domeMat.transparencyMode = BABYLON.Material.MATERIAL_OPAQUE;
+            } else {
+                domeMat.diffuseTexture.hasAlpha = true;
+                domeMat.useAlphaFromDiffuseTexture = true;
+                domeMat.transparencyMode = BABYLON.Material.MATERIAL_ALPHABLEND;
+                domeMat.backFaceCulling = false;
+                domeMat.needDepthPrePass = true;
+            }
+        }
 
-Semaine 2 – IA & numérique : « Comment travailler AVEC l’IA sans se faire remplacer »
+        // Ajout de l'image "surmonter.png"
+        function createSurmonterImage() {
+            const texture = new BABYLON.Texture("surmonter.png", scene);
+            const material = new BABYLON.StandardMaterial("surmonterMat", scene);
+            material.diffuseTexture = texture;
+            material.emissiveColor = BABYLON.Color3.White();
+            material.backFaceCulling = false;
+            material.alpha = 1;
 
-Semaine 3 – Orientation : « Où trouver les métiers émergents grâce à l’IA »
+            const size = 100; // Taille de l'image, ajustez au besoin
+            const plane = BABYLON.MeshBuilder.CreatePlane("surmonterPlane", { width: size, height: size }, scene);
+            plane.material = material;
+            
+            // Lier le plan à la caméra
+            plane.parent = camera;
+            // Positionner le plan à une certaine distance devant la caméra et légèrement en haut
+            plane.position = new BABYLON.Vector3(0, 20, 100); 
 
-Semaine 4 – Bien-être : « Une respiration pour gérer le stress avant un entretien »
+            surmonterImage = plane;
+        }
 
-🟣 Mois 2 : « Aller plus loin »
-🎯 Objectif : développer des réflexes pratiques pour mieux se projeter dans la vie professionnelle.
+        supportsWebP((isSupported) => {
+            const panoFile = isSupported ? "test7.webp" : "abstract1.png";
+            createPhotoDome(panoFile);
+        });
 
-Semaine 5 – Soft skills : « Comment raconter une expérience avec la méthode STAR »
+        createSurmonterImage(); // Créer l'image sur le plan
 
-Semaine 6 – Entrepreneuriat : « Comment tester ton idée en 1 journée »
+        engine.runRenderLoop(() => {
+            scene.render();
+        });
 
-Semaine 7 – Orientation : « Les secteurs qui recrutent malgré l’automatisation »
+        window.addEventListener("resize", () => engine.resize());
 
-Semaine 8 – IA & numérique : « Une astuce pour vérifier l’exactitude d’une réponse générée par l’IA »
+        const hamburgerButton = document.getElementById('hamburger-button');
+        const menuOverlay = document.getElementById('menu-overlay');
+        hamburgerButton.addEventListener('click', () => {
+            hamburgerButton.classList.toggle('open');
+            menuOverlay.classList.toggle('open');
+        });
+        const customText = document.getElementById("customText");
+        customText.addEventListener("click", () => {
+            customText.classList.toggle("zoomed");
+        });
+        document.addEventListener("DOMContentLoaded", () => {
+            const scrollButton = document.getElementById('scrollButton');
+            if (scrollButton) {
+                scrollButton.addEventListener('click', () => {
+                    const rotationIncrement = 30 * (Math.PI / 180);
+                    BABYLON.Animation.CreateAndStartAnimation(
+                        "scrollCam",
+                        camera,
+                        "alpha",
+                        60,
+                        60,
+                        camera.alpha,
+                        camera.alpha + rotationIncrement,
+                        BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT,
+                        new BABYLON.CubicEase()
+                    );
+                });
+            }
+        });
 
-🟢 Mois 3 : « S’affirmer et se projeter »
-🎯 Objectif : donner aux étudiants confiance et vision pour l’avenir.
-
-Semaine 9 – Bien-être : « Comment transformer le doute en énergie positive »
-
-Semaine 10 – Soft skills : « 3 mots-clés à utiliser pour montrer ton adaptabilité »
-
-Semaine 11 – Entrepreneuriat : « L’erreur à éviter quand on se lance en freelance étudiant »
-
-Semaine 12 – Orientation & IA : « Les 2 compétences numériques incontournables en 2025 »
-
-🎯 Conseils pratiques pour diffusion
-Format vertical (TikTok, Insta Reels, YouTube Shorts).
-
-Durée : 25–30 secondes, pas plus.
-
-Style : dynamique, mots-clés affichés à l’écran, sous-titres automatiques.
-
-Diffusion hebdo fixe : ex. chaque lundi matin → rendez-vous régulier.
-
-Réutilisation : newsletter étudiante, écrans campus, Moodle.
-
-👉 Résultat : après 3 mois, tu auras 12 capsules publiées, testées sur ton public, et une bonne idée des formats qui marchent le mieux (ce qui guidera la suite de la production sur 6–12 mois).
-
+        function animateCameraSpin() {
+            const initialCameraAlphaOffset = -Math.PI / 8;
+            camera.alpha = Math.PI + initialCameraAlphaOffset;
+            
+            camera.beta = Math.PI / 2;
+            camera.radius = 450;
+            
+            BABYLON.Animation.CreateAndStartAnimation(
+                "cameraSpin",
+                camera,
+                "alpha",
+                60,
+                120,
+                camera.alpha,
+                camera.alpha + (2 * Math.PI) / 3,
+                BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT,
+                new BABYLON.CubicEase()
+            );
+            
+            setTimeout(() => {
+                camera.attachControl(canvas, true);
+                camera.inputs.add(new BABYLON.ArcRotateCameraPointersInput());
+                camera.inputs.add(new BABYLON.ArcRotateCameraKeyboardInput());
+            }, 2000);
+        }
+    </script>
+</body>
+</html>
