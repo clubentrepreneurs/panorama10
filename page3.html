@@ -322,11 +322,10 @@
 
         const objectLabelMap = new Map();
         
-        // --- NOUVEAU CODE POUR LES GIFS ---
-        // Remplace les GLB par des URLs de GIFs
+        // --- CODE MIS À JOUR POUR LES GIFS ---
         const gifUrls = [
-            "focus.gif",
-            "https://i.giphy.com/media/l0HlSgT3784T5G10P/giphy.gif",
+            "https://i.giphy.com/media/l0HlTLw7b7X135e6c/giphy.gif",
+            "focus.gif", // Le GIF local
             "https://i.giphy.com/media/l0HlG5qfF9qg8m1rW/giphy.gif",
             "https://i.giphy.com/media/l0HlD5q3f5qXw939C/giphy.gif",
             "https://i.giphy.com/media/l0HlSgT3784T5G10P/giphy.gif",
@@ -337,15 +336,22 @@
             "https://i.giphy.com/media/l0HlD5q3f5qXw939C/giphy.gif"
         ];
         
-        // Définition de la taille et de la position
         const radius = 450; 
-        const gifSize = 100; // Taille des plans
+        const gifSize = 100;
         const angleIncrement = (2 * Math.PI) / gifUrls.length;
         const gifMeshes = [];
 
         gifUrls.forEach((url, index) => {
-            const texture = new BABYLON.VideoTexture("gif-" + index, url, scene, true, false);
-            texture.vScale = -1; // Inverser verticalement si le GIF est à l'envers
+            let texture;
+            // Vérifier si l'URL est un fichier local (ou si elle ne provient pas de Giphy, par exemple)
+            // Si le nom du fichier se termine par .gif, on utilise VideoTexture
+            if (url.endsWith('.gif')) {
+                texture = new BABYLON.VideoTexture("gif-" + index, url, scene, true, false);
+                texture.vScale = -1; // Inverser verticalement si le GIF est à l'envers
+            } else {
+                // Utiliser Texture pour les images non-animées ou autres formats
+                texture = new BABYLON.Texture(url, scene);
+            }
 
             const material = new BABYLON.StandardMaterial("gif-mat-" + index, scene);
             material.diffuseTexture = texture;
@@ -358,12 +364,11 @@
             const angle = index * angleIncrement;
             plane.position.x = radius * Math.sin(angle);
             plane.position.z = radius * Math.cos(angle);
-            plane.rotation.y = -angle; // Tourner le plan pour qu'il fasse face au centre
+            plane.rotation.y = -angle;
 
             gifMeshes.push(plane);
         });
 
-        // Les labels sont gérés séparément pour les GIFs
         const gifLabels = [
             "GIF 1", "GIF 2", "GIF 3", "GIF 4", "GIF 5",
             "GIF 6", "GIF 7", "GIF 8", "GIF 9", "GIF 10"
@@ -380,7 +385,6 @@
         
         engine.runRenderLoop(() => {
             scene.render();
-            // Mettre à jour la position des labels textuels
             gifLabelDivs.forEach(({ div: labelDiv, mesh }) => {
                 if (!mesh) return;
 
@@ -391,9 +395,9 @@
                     camera.viewport.toGlobal(engine.getRenderWidth(), engine.getRenderHeight())
                 );
 
-                if (pos.z >= 0 && pos.z <= 1) { // Vérifier si le mesh est dans le champ de vision
+                if (pos.z >= 0 && pos.z <= 1) { 
                     labelDiv.style.left = `${pos.x}px`;
-                    labelDiv.style.top = `${pos.y + (mesh.scaling.y * 50)}px`; // Ajuster la position verticale
+                    labelDiv.style.top = `${pos.y + (mesh.scaling.y * 50)}px`;
                     labelDiv.style.visibility = "visible";
                 } else {
                     labelDiv.style.visibility = "hidden";
