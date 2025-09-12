@@ -90,7 +90,7 @@
             opacity: 0;
         }
         #hamburger-button.open .line:nth-child(3) {
-            transform: translateY(-14px) rotate(-45deg);
+            transform: translateY(-14px) rotate(-145deg);
         }
         #hamburger-label {
             position: absolute;
@@ -340,17 +340,20 @@
             material.emissiveColor = BABYLON.Color3.White();
             material.backFaceCulling = false;
             material.alpha = 1;
+            
+            // --- MODIFICATION ICI : Rendre la texture visible des deux côtés ---
+            material.sideOrientation = BABYLON.Material.BABYLON.Material.DOUBLESIDE;
+            // --- FIN DE LA MODIFICATION ---
 
             const size = 150;
             surmonterImageMesh = BABYLON.MeshBuilder.CreatePlane("surmonterPlane", { width: size, height: size }, scene);
             surmonterImageMesh.material = material;
             
-            // L'image est placée très proche de la paroi du dôme (rayon de 500).
             surmonterImageMesh.position = new BABYLON.Vector3(490, 0, 0); 
             
-            // --- MODIFICATION ICI : Rotation de 180 degrés sur l'axe Y ---
-            surmonterImageMesh.rotation.y = Math.PI;
-            // --- FIN DE LA MODIFICATION ---
+            // L'image "regarde" le centre de la scène.
+            // On retire la rotation sur l'axe Y pour laisser la gestion à sideOrientation.
+            // surmonterImageMesh.rotation.y = Math.PI; 
 
             surmonterImageMesh.isClickable = true;
         }
