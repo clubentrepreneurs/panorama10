@@ -191,7 +191,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            z-index: 3000; /* Au-dessus de tout le reste */
+            z-index: 3000;
             opacity: 0;
             visibility: hidden;
             transition: opacity 0.3s ease-in-out, visibility 0s linear 0.3s;
@@ -203,9 +203,9 @@
         }
         #video-modal-content {
             position: relative;
-            width: 90%; /* Occupe 90% de la largeur */
-            max-width: 960px; /* Limite la largeur maximale */
-            height: 50%; /* Occupe la moitié de la hauteur de la page */
+            width: 90%;
+            max-width: 960px;
+            height: 50%;
             background-color: white;
             border-radius: 8px;
             overflow: hidden;
@@ -215,7 +215,7 @@
         }
         #video-iframe {
             width: 100%;
-            height: 100%; /* L'iframe prend toute la hauteur du conteneur */
+            height: 100%;
             border: none;
         }
         #close-video-modal {
@@ -236,7 +236,6 @@
             z-index: 3001;
         }
 
-        /* Media queries pour les tailles d'écran */
         @media (min-width: 768px) {
             #menu-overlay h2 {
                 font-size: 28px;
@@ -276,7 +275,7 @@
     </div>
     <button id="scrollButton" class="actionButton">
         &#x21bb; </button>
-
+    
     <div id="video-modal-overlay">
         <div id="video-modal-content">
             <button id="close-video-modal">&times;</button>
@@ -294,11 +293,11 @@
         
         const camera = new BABYLON.ArcRotateCamera("cam", Math.PI / 2, Math.PI / 2, 450, new BABYLON.Vector3(0, 0, 0), scene);
         camera.attachControl(canvas, true);
-        camera.inputs.clear(); // Désactiver les contrôles de la caméra au démarrage
+        camera.inputs.clear();
         new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
         let panoLoaded = false;
-        let surmonterImageMesh; // Renommé pour plus de clarté
-        let surmonterLabelDiv; // Div HTML pour le label cliquable
+        let surmonterImageMesh;
+        let surmonterLabelDiv;
 
         function supportsWebP(callback) {
             const img = new Image();
@@ -328,16 +327,13 @@
             }
         }
 
-        // Ajout de l'image "surmonter.png"
         function createSurmonterImage() {
-            // Créer un div HTML pour le label/bouton cliquable
             surmonterLabelDiv = document.createElement("div");
-            surmonterLabelDiv.classList.add("object-label"); // Réutiliser la classe existante ou en créer une nouvelle
-            surmonterLabelDiv.textContent = "SURMONTER"; // Texte pour l'image cliquable
-            surmonterLabelDiv.style.visibility = "hidden"; // Cacher au début
+            surmonterLabelDiv.classList.add("object-label");
+            surmonterLabelDiv.textContent = "SURMONTER";
+            surmonterLabelDiv.style.visibility = "hidden";
             document.body.appendChild(surmonterLabelDiv);
 
-            // Charger l'image sur une texture pour la positionner dans la scène
             const texture = new BABYLON.Texture("surmonter.png", scene);
             const material = new BABYLON.StandardMaterial("surmonterMat", scene);
             material.diffuseTexture = texture;
@@ -345,16 +341,17 @@
             material.backFaceCulling = false;
             material.alpha = 1;
 
-            const size = 150; // Taille de l'image, ajustez au besoin
+            const size = 150;
             surmonterImageMesh = BABYLON.MeshBuilder.CreatePlane("surmonterPlane", { width: size, height: size }, scene);
             surmonterImageMesh.material = material;
             
-            // Positionner l'image dans la scène (coordonnées fixes)
-            surmonterImageMesh.position = new BABYLON.Vector3(200, 0, 0); // Exemple: 200 unités sur l'axe X (à droite du centre)
-            // Faire en sorte que le plan "regarde" toujours le centre de la scène (où se trouve la caméra au début)
+            // L'image est placée très proche de la paroi du dôme (rayon de 500).
+            // Le "490" permet d'éviter qu'elle ne traverse le dôme.
+            surmonterImageMesh.position = new BABYLON.Vector3(490, 0, 0); 
+
+            // L'image "regarde" le centre de la scène.
             surmonterImageMesh.lookAt(new BABYLON.Vector3(0, 0, 0));
 
-            // Ajouter un identifiant unique ou une propriété pour identifier ce mesh
             surmonterImageMesh.isClickable = true;
         }
 
@@ -363,14 +360,13 @@
             createPhotoDome(panoFile);
         });
 
-        createSurmonterImage(); // Créer l'image sur le plan et son div cliquable
+        createSurmonterImage();
 
         engine.runRenderLoop(() => {
             scene.render();
-            // Mettre à jour la position du label "SURMONTER"
             if (surmonterImageMesh && surmonterLabelDiv) {
                 const boundingBox = surmonterImageMesh.getBoundingInfo().boundingBox;
-                const center = boundingBox.centerWorld; // Utiliser le centre du mesh pour le label
+                const center = boundingBox.centerWorld;
 
                 const pos = BABYLON.Vector3.Project(
                     center,
@@ -379,7 +375,7 @@
                     camera.viewport.toGlobal(engine.getRenderWidth(), engine.getRenderHeight())
                 );
 
-                if (pos.z >= 0 && pos.z <= 1) { // Vérifier si le mesh est dans le champ de vision
+                if (pos.z >= 0 && pos.z <= 1) {
                     surmonterLabelDiv.style.left = `${pos.x}px`;
                     surmonterLabelDiv.style.top = `${pos.y}px`;
                     surmonterLabelDiv.style.visibility = "visible";
@@ -421,10 +417,9 @@
                 });
             }
 
-            // Gestionnaire de clic pour le label "SURMONTER"
             if (surmonterLabelDiv) {
                 surmonterLabelDiv.addEventListener('click', () => {
-                    openVideoModal("surmonter.mp4"); // Ouvrir la vidéo
+                    openVideoModal("surmonter.mp4");
                 });
             }
         });
@@ -455,7 +450,6 @@
             }, 2000);
         }
 
-        // Logique de la modale vidéo
         const videoModalOverlay = document.getElementById('video-modal-overlay');
         const videoIframe = document.getElementById('video-iframe');
         const closeVideoModalButton = document.getElementById('close-video-modal');
@@ -466,13 +460,12 @@
         }
 
         function closeVideoModal() {
-            videoIframe.src = ""; // Arrêter la lecture de la vidéo
+            videoIframe.src = "";
             videoModalOverlay.classList.remove('visible');
         }
 
         closeVideoModalButton.addEventListener('click', closeVideoModal);
 
-        // Fermer la modale en cliquant en dehors (si désiré)
         videoModalOverlay.addEventListener('click', (event) => {
             if (event.target === videoModalOverlay) {
                 closeVideoModal();
