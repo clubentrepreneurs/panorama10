@@ -346,11 +346,11 @@
             surmonterImageMesh.material = material;
             
             // L'image est placée très proche de la paroi du dôme (rayon de 500).
-            // Le "490" permet d'éviter qu'elle ne traverse le dôme.
             surmonterImageMesh.position = new BABYLON.Vector3(490, 0, 0); 
-
-            // L'image "regarde" le centre de la scène.
-            surmonterImageMesh.lookAt(new BABYLON.Vector3(0, 0, 0));
+            
+            // --- MODIFICATION ICI : Rotation de 180 degrés sur l'axe Y ---
+            surmonterImageMesh.rotation.y = Math.PI;
+            // --- FIN DE LA MODIFICATION ---
 
             surmonterImageMesh.isClickable = true;
         }
