@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8" />
-    <title>GLB + panorama + menu</title>
+    <title>GIFs + panorama + menu</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
     <link href="https://fonts.cdnfonts.com/css/apex-new" rel="stylesheet">
     <style>
@@ -283,9 +283,6 @@
         const scene = new BABYLON.Scene(engine);
         scene.clearColor = new BABYLON.Color4(0, 0, 0, 0);
         
-        // Ajustez la position de la caméra pour mieux englober les objets
-        // L'angle alpha initial sera ajusté pour pointer vers bluebot.glb
-        // beta à Math.PI / 2 place la caméra sur l'équateur (pas de hauteur verticale)
         const camera = new BABYLON.ArcRotateCamera("cam", Math.PI / 2, Math.PI / 2, 450, new BABYLON.Vector3(0, 0, 0), scene);
         camera.attachControl(canvas, true);
         camera.inputs.clear();
@@ -303,10 +300,7 @@
             dome.imageMode = BABYLON.PhotoDome.MODE_MONOSCOPIC;
             dome.onReady = () => {
                 panoLoaded = true;
-                // --- DÉBUT DE LA ZONE DE MODIFICATION ---
-                // Appelle animateCameraSpin directement, car il n'y a plus d'animation Lottie à attendre.
                 animateCameraSpin(); 
-                // --- FIN DE LA ZONE DE MODIFICATION ---
             };
             const domeMat = dome.mesh.material;
             if (panoFile.endsWith(".jpg") || panoFile.endsWith(".jpeg")) {
@@ -321,65 +315,92 @@
                 domeMat.needDepthPrePass = true;
             }
         }
-        // let lottieAnimationComplete = false; // Plus besoin de cette variable
-        // --- DÉBUT DE LA ZONE DE MODIFICATION ---
-        // Cette fonction n'est plus utile dans son format actuel.
-        // function checkAndStartPanoramaIntro() {
-        //     if (panoLoaded && lottieAnimationComplete) {
-        //         canvas.classList.remove('hidden');
-        //         animateCameraSpin();
-        //     }
-        // }
-        // --- FIN DE LA ZONE DE MODIFICATION ---
         supportsWebP((isSupported) => {
             const panoFile = isSupported ? "test7.webp" : "abstract1.png";
             createPhotoDome(panoFile);
         });
 
         const objectLabelMap = new Map();
-        // La liste des fichiers GLB est vide
-        const glbFiles = []; 
-        // La liste des labels est vide
-        const objectLabels = []; 
-        // La liste des liens est vide
-        const objectLinks = []; 
+        
+        // --- NOUVEAU CODE POUR LES GIFS ---
+        // Remplace les GLB par des URLs de GIFs
+        const gifUrls = [
+            "https://i.giphy.com/media/l0HlTLw7b7X135e6c/giphy.gif",
+            "https://i.giphy.com/media/l0HlSgT3784T5G10P/giphy.gif",
+            "https://i.giphy.com/media/l0HlG5qfF9qg8m1rW/giphy.gif",
+            "https://i.giphy.com/media/l0HlD5q3f5qXw939C/giphy.gif",
+            "https://i.giphy.com/media/l0HlSgT3784T5G10P/giphy.gif",
+            "https://i.giphy.com/media/l0HlD5q3f5qXw939C/giphy.gif",
+            "https://i.giphy.com/media/l0HlTLw7b7X135e6c/giphy.gif",
+            "https://i.giphy.com/media/l0HlG5qfF9qg8m1rW/giphy.gif",
+            "https://i.giphy.com/media/l0HlSgT3784T5G10P/giphy.gif",
+            "https://i.giphy.com/media/l0HlD5q3f5qXw939C/giphy.gif"
+        ];
+        
+        // Définition de la taille et de la position
+        const radius = 450; 
+        const gifSize = 100; // Taille des plans
+        const angleIncrement = (2 * Math.PI) / gifUrls.length;
+        const gifMeshes = [];
 
-        const radius = 400; 
-        const angleIncrement = (2 * Math.PI) / glbFiles.length;
+        gifUrls.forEach((url, index) => {
+            const texture = new BABYLON.VideoTexture("gif-" + index, url, scene, true, false);
+            texture.vScale = -1; // Inverser verticalement si le GIF est à l'envers
 
-        // La boucle pour charger les GLB a été supprimée, car les tableaux sont vides.
-        // glbFiles.forEach((file, index) => { ... });
+            const material = new BABYLON.StandardMaterial("gif-mat-" + index, scene);
+            material.diffuseTexture = texture;
+            material.emissiveColor = new BABYLON.Color3.White();
 
+            const plane = BABYLON.MeshBuilder.CreatePlane("gif-plane-" + index, { width: gifSize, height: gifSize }, scene);
+            plane.material = material;
+            plane.position.y = 0;
+
+            const angle = index * angleIncrement;
+            plane.position.x = radius * Math.sin(angle);
+            plane.position.z = radius * Math.cos(angle);
+            plane.rotation.y = -angle; // Tourner le plan pour qu'il fasse face au centre
+
+            gifMeshes.push(plane);
+        });
+
+        // Les labels sont gérés séparément pour les GIFs
+        const gifLabels = [
+            "GIF 1", "GIF 2", "GIF 3", "GIF 4", "GIF 5",
+            "GIF 6", "GIF 7", "GIF 8", "GIF 9", "GIF 10"
+        ];
+        
+        const gifLabelDivs = [];
+        gifLabels.forEach((text, index) => {
+            const labelDiv = document.createElement("div");
+            labelDiv.classList.add("object-label");
+            labelDiv.textContent = text;
+            document.body.appendChild(labelDiv);
+            gifLabelDivs.push({ div: labelDiv, mesh: gifMeshes[index] });
+        });
+        
         engine.runRenderLoop(() => {
             scene.render();
-            // Mettre à jour la position des labels textuels (la boucle ne s'exécute pas car la carte est vide)
-            objectLabelMap.forEach((labelDiv, mesh) => {
+            // Mettre à jour la position des labels textuels
+            gifLabelDivs.forEach(({ div: labelDiv, mesh }) => {
                 if (!mesh) return;
 
-                // Obtenir la position du bas du mesh dans l'espace monde
-                const boundingBox = mesh.getBoundingInfo().boundingBox;
-                const bottomCenter = new BABYLON.Vector3(
-                    (boundingBox.minimumWorld.x + boundingBox.maximumWorld.x) / 2,
-                    boundingBox.minimumWorld.y - 10,
-                    (boundingBox.minimumWorld.z + boundingBox.maximumWorld.z) / 2
-                );
-
                 const pos = BABYLON.Vector3.Project(
-                    bottomCenter,
+                    mesh.position,
                     BABYLON.Matrix.IdentityReadOnly,
                     scene.getTransformMatrix(),
                     camera.viewport.toGlobal(engine.getRenderWidth(), engine.getRenderHeight())
                 );
 
-                if (pos.z >= 0 && pos.z <= 1) {
+                if (pos.z >= 0 && pos.z <= 1) { // Vérifier si le mesh est dans le champ de vision
                     labelDiv.style.left = `${pos.x}px`;
-                    labelDiv.style.top = `${pos.y}px`;
+                    labelDiv.style.top = `${pos.y + (mesh.scaling.y * 50)}px`; // Ajuster la position verticale
                     labelDiv.style.visibility = "visible";
                 } else {
                     labelDiv.style.visibility = "hidden";
                 }
             });
         });
+
         window.addEventListener("resize", () => engine.resize());
         const hamburgerButton = document.getElementById('hamburger-button');
         const menuOverlay = document.getElementById('menu-overlay');
@@ -392,29 +413,6 @@
             customText.classList.toggle("zoomed");
         });
         document.addEventListener("DOMContentLoaded", () => {
-            // --- DÉBUT DE LA ZONE DE MODIFICATION ---
-            // Le code Lottie a été supprimé
-            // const lottieContainer = document.getElementById('lottie-container');
-            // const anim = lottie.loadAnimation({
-            //     container: lottieContainer,
-            //     renderer: 'svg',
-            //     loop: false,
-            //     autoplay: true,
-            //     path: 'intro.json',
-            //     rendererSettings: {
-            //         preserveAspectRatio: 'xMidYMid slice'
-            //     }
-            // });
-            // anim.addEventListener('complete', () => {
-            //     lottieAnimationComplete = true;
-            //     lottieContainer.classList.add('fade-out');
-            //     setTimeout(() => {
-            //         lottieContainer.style.display = 'none';
-            //     }, 1000);
-            //     checkAndStartPanoramaIntro();
-            // });
-            // --- FIN DE LA ZONE DE MODIFICATION ---
-
             const scrollButton = document.getElementById('scrollButton');
             if (scrollButton) {
                 scrollButton.addEventListener('click', () => {
@@ -445,22 +443,19 @@
         });
 
         function animateCameraSpin() {
-            // --- DÉBUT DE LA ZONE DE MODIFICATION POUR LE DÉCALAGE DROITE ---
             const initialCameraAlphaOffset = -Math.PI / 8; 
             camera.alpha = Math.PI + initialCameraAlphaOffset; 
-            // --- FIN DE LA ZONE DE MODIFICATION POUR LE DÉCALAGE DROITE ---
-
-            camera.beta = Math.PI / 2; // Sur l'équateur
-            camera.radius = 450; // Ajustez si nécessaire pour voir tous les objets
-
+            camera.beta = Math.PI / 2;
+            camera.radius = 450; 
+            
             BABYLON.Animation.CreateAndStartAnimation(
                 "cameraSpin",
                 camera,
                 "alpha",
                 60,
-                120, // Durée de l'animation en images
-                camera.alpha, // Commence avec le nouvel alpha décalé
-                camera.alpha + (2 * Math.PI) / 3, // Et l'animation continue à partir de ce point
+                120,
+                camera.alpha, 
+                camera.alpha + (2 * Math.PI) / 3,
                 BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT,
                 new BABYLON.CubicEase()
             );
@@ -469,7 +464,7 @@
                 camera.attachControl(canvas, true);
                 camera.inputs.add(new BABYLON.ArcRotateCameraPointersInput());
                 camera.inputs.add(new BABYLON.ArcRotateCameraKeyboardInput());
-            }, 2000); // Assurez-vous que c'est après l'animation
+            }, 2000);
         }
     </script>
 </body>
