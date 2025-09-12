@@ -45,10 +45,20 @@
             transform: translateX(-50%) scale(1.1);
         }
         @keyframes bounceIn {
-            0% { opacity: 0; transform: translate(-50%, -200%) scale(0.3); }
-            60% { opacity: 1; transform: translate(-50%, 20%) scale(1.05); }
-            80% { transform: translate(-50%, -10%) scale(0.95); }
-            100% { transform: translate(-50%, 0) scale(1); }
+            0% {
+                opacity: 0;
+                transform: translate(-50%, -200%) scale(0.3);
+            }
+            60% {
+                opacity: 1;
+                transform: translate(-50%, 20%) scale(1.05);
+            }
+            80% {
+                transform: translate(-50%, -10%) scale(0.95);
+            }
+            100% {
+                transform: translate(-50%, 0) scale(1);
+            }
         }
         #menu-container {
             position: fixed;
@@ -76,7 +86,9 @@
         #hamburger-button.open .line:nth-child(1) {
             transform: translateY(14px) rotate(45deg);
         }
-        #hamburger-button.open .line:nth-child(2) { opacity: 0; }
+        #hamburger-button.open .line:nth-child(2) {
+            opacity: 0;
+        }
         #hamburger-button.open .line:nth-child(3) {
             transform: translateY(-14px) rotate(-45deg);
         }
@@ -109,7 +121,9 @@
             display: flex;
             flex-direction: column;
         }
-        #menu-overlay.open { transform: translateX(0); }
+        #menu-overlay.open {
+            transform: translateX(0);
+        }
         #menu-overlay h2 {
             font-size: 20px;
             font-weight: bold;
@@ -119,8 +133,14 @@
             margin-bottom: 20px;
             text-align: center;
         }
-        #menu-overlay ul { list-style: disc; padding: 0 0 0 20px; margin: 0; }
-        #menu-overlay ul li { margin-bottom: 15px; }
+        #menu-overlay ul {
+            list-style: disc;
+            padding: 0 0 0 20px;
+            margin: 0;
+        }
+        #menu-overlay ul li {
+            margin-bottom: 15px;
+        }
         #menu-overlay ul li a {
             text-decoration: none;
             color: black;
@@ -130,7 +150,10 @@
             padding: 5px 0;
             transition: color 0.3s ease;
         }
-        #menu-overlay ul li a:hover { color: #00AFD7; font-weight: bold; }
+        #menu-overlay ul li a:hover {
+            color: #00AFD7;
+            font-weight: bold;
+        }
         .object-label {
             position: absolute;
             color: black;
@@ -147,10 +170,9 @@
             transition: transform 0.2s ease-in-out, background-color 0.2s ease-in-out;
         }
         @media (min-width: 768px) {
-            .object-label { font-size: 82px; }
-            #menu-overlay h2 { font-size: 28px; }
-            #menu-overlay ul li a { font-size: 24px; }
-            #hamburger-label { font-size: 24px; }
+            .object-label {
+                font-size: 82px;
+            }
         }
         .object-label:hover {
             transform: translate(-50%, 0%) scale(1.05);
@@ -174,14 +196,35 @@
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             transition: all 0.3s ease;
         }
-        #scrollButton { right: 20px; }
-        #linkButton { right: 80px; font-size: 16px; }
-        body.transition-out { transition: opacity 0.5s ease-in-out; opacity: 0; }
+        #scrollButton {
+            right: 20px;
+        }
+        #linkButton {
+            right: 80px;
+            font-size: 16px;
+        }
+        body.transition-out {
+            transition: opacity 0.5s ease-in-out;
+            opacity: 0;
+        }
+        @media (min-width: 768px) {
+            #menu-overlay h2 {
+                font-size: 28px;
+            }
+            #menu-overlay ul li a {
+                font-size: 24px;
+            }
+            #hamburger-label {
+                font-size: 24px;
+            }
+        }
     </style>
 </head>
 <body>
     <canvas id="renderCanvas"></canvas>
-    <div id="customText"><br></div>
+    <div id="customText">
+        <br>
+    </div>
     
     <div id="menu-container">
         <button id="hamburger-button">
@@ -201,23 +244,29 @@
             <li><a href="page4.html">Le laboratoire numérique : boostez votre réussite grâce à vos compétences!</a></li>
         </ul>
     </div>
-    <button id="scrollButton" class="actionButton">&#x21bb;</button>
-
+    <button id="scrollButton" class="actionButton">
+        &#x21bb; </button>
+    
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
     <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
     <script>
         const canvas = document.getElementById("renderCanvas");
         const engine = new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true, alpha: true });
         const scene = new BABYLON.Scene(engine);
-        scene.clearColor = new BABYLON.Color4(0,0,0,0);
-
-        const camera = new BABYLON.ArcRotateCamera("cam", Math.PI / 2, Math.PI / 2, 450, new BABYLON.Vector3(0,0,0), scene);
+        scene.clearColor = new BABYLON.Color4(0, 0, 0, 0);
+        
+        const camera = new BABYLON.ArcRotateCamera("cam", Math.PI / 2, Math.PI / 2, 450, new BABYLON.Vector3(0, 0, 0), scene);
         camera.attachControl(canvas, true);
         camera.inputs.clear();
         new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0,1,0), scene);
-
         let panoLoaded = false;
 
+        function supportsWebP(callback) {
+            const img = new Image();
+            img.onload = () => callback(img.width > 0 && img.height > 0);
+            img.onerror = () => callback(false);
+            img.src = "data:image/webp;base64,UklGRiIAAABXRUJQVlA4TCEAAAAvAAAAAA...";
+        }
         function createPhotoDome(panoFile) {
             const dome = new BABYLON.PhotoDome("panorama", panoFile + "?v=" + Date.now(), { resolution: 32, size: 1000 }, scene);
             dome.imageMode = BABYLON.PhotoDome.MODE_MONOSCOPIC;
@@ -238,9 +287,15 @@
                 domeMat.needDepthPrePass = true;
             }
         }
+        
+        supportsWebP((isSupported) => {
+            const panoFile = isSupported ? "test7.webp" : "abstract1.png";
+            createPhotoDome(panoFile);
+        });
 
         const objectLabelMap = new Map();
-        const glbFiles = ["bluebot.glb", "IA.glb", "labonumerique.glb"];
+        // Remplacement de "bluebot.glb" par "focus.gif"
+        const glbFiles = ["focus.gif", "IA.glb", "labonumerique.glb"];
         const objectLabels = [
             "Réussir sa rentrée",
             "Outils IA d'aide à la réussite",
@@ -256,131 +311,170 @@
         const angleIncrement = (2 * Math.PI) / glbFiles.length;
 
         glbFiles.forEach((file, index) => {
-            if(index === 0) {
-                // GIF focus.gif
-                const gifPlane = BABYLON.MeshBuilder.CreatePlane("gifPlane", {width:100, height:100}, scene);
-                gifPlane.position.y = -190;
-                gifPlane.position.z = radius;
-                const pivot = new BABYLON.TransformNode("pivot_0", scene);
-                pivot.rotation.y = index * angleIncrement;
-                gifPlane.parent = pivot;
+            const labelDiv = document.createElement("div");
+            labelDiv.classList.add("object-label");
+            labelDiv.textContent = objectLabels[index];
+            document.body.appendChild(labelDiv);
+            
+            // Nouveau traitement pour le GIF
+            if (file === "focus.gif") {
+                const texture = new BABYLON.VideoTexture("videoTex", file, scene, true, true, BABYLON.Texture.TRILINEAR_SAMPLINGMODE, {
+                    autoPlay: true,
+                    loop: true,
+                    muted: true,
+                    width: 256,
+                    height: 256
+                });
+                
+                const material = new BABYLON.StandardMaterial("gifMat", scene);
+                material.diffuseTexture = texture;
+                material.emissiveTexture = texture;
+                material.backFaceCulling = false;
+                material.disableLighting = true;
+                material.alpha = 1.0;
+                material.alphaMode = BABYLON.Engine.ALPHA_COMBINE;
 
-                const gifMat = new BABYLON.StandardMaterial("gifMat", scene);
-                const gifTexture = new BABYLON.VideoTexture("gifTex", ["focus.gif"], scene, true, true,
-                    BABYLON.VideoTexture.TRILINEAR_SAMPLINGMODE, {autoPlay:true, loop:true, autoUpdateTexture:true});
-                gifMat.diffuseTexture = gifTexture;
-                gifMat.opacityTexture = gifTexture;
-                gifMat.backFaceCulling = false;
-                gifPlane.material = gifMat;
+                const plane = BABYLON.MeshBuilder.CreatePlane("gifPlane", {
+                    width: 150, // Ajustez la taille du plan pour le GIF
+                    height: 150
+                }, scene);
+                plane.material = material;
+                
+                const pivot = new BABYLON.TransformNode("pivot_" + index, scene);
+                let angle = index * angleIncrement;
+                pivot.rotation.y = angle;
+                plane.parent = pivot;
+                plane.position.z = radius;
+                plane.position.y = -80; // Ajustez la position Y pour le placer au bon endroit
 
-                const labelDiv = document.createElement("div");
-                labelDiv.classList.add("object-label");
-                labelDiv.textContent = objectLabels[index];
-                document.body.appendChild(labelDiv);
-                objectLabelMap.set(gifPlane, labelDiv);
+                objectLabelMap.set(plane, labelDiv);
 
-                if(objectLinks[index]) {
-                    labelDiv.addEventListener('click', () => {
-                        document.body.classList.add('transition-out');
-                        setTimeout(()=>{window.location.href = objectLinks[index];},500);
-                    });
-                }
-            } else {
-                // Les autres GLB
+                // Ajoutez le comportement pour que le plan suive la caméra
+                scene.onBeforeRenderObservable.add(() => {
+                    plane.lookAt(camera.position);
+                });
+                
+            } else { // Traitement existant pour les fichiers GLB
                 BABYLON.SceneLoader.ImportMesh("", "./", file, scene, function(meshes, particleSystems, skeletons, animationGroups) {
-                    if (!meshes || meshes.length === 0) return;
-                    const mesh = meshes[0];
-                    if(animationGroups) animationGroups.forEach(ag=>ag.start(true));
-                    mesh.scaling = new BABYLON.Vector3(50,50,50);
-                    if(file==="labonumerique.glb") {
-                        const scaleFactor=2.0;
-                        mesh.scaling.x*=scaleFactor; mesh.scaling.y*=scaleFactor; mesh.scaling.z*=scaleFactor;
-                        mesh.position.y=-60;
+                    if (!meshes || meshes.length === 0) {
+                        console.warn(`Aucun mesh trouvé dans ${file}.`);
+                        return;
                     }
-                    const pivot = new BABYLON.TransformNode("pivot_"+index, scene);
-                    pivot.rotation.y = index * angleIncrement;
+                    const mesh = meshes[0];
+                    if (animationGroups) {
+                        animationGroups.forEach(ag => ag.start(true));
+                    }
+                    
+                    mesh.scaling = new BABYLON.Vector3(50, 50, 50);
+
+                    if (file === "labonumerique.glb") {
+                        const scaleFactor = 2.0;
+                        mesh.scaling.x *= scaleFactor;
+                        mesh.scaling.y *= scaleFactor;
+                        mesh.scaling.z *= scaleFactor;
+                        mesh.position.y = -60;
+                    }
+
+                    const pivot = new BABYLON.TransformNode("pivot_" + index, scene);
+                    let angle = index * angleIncrement;
+                    
+                    pivot.rotation.y = angle;
                     mesh.parent = pivot;
                     mesh.position.z = radius;
-                    if(file==="IA.glb") mesh.position.y=-90;
 
-                    const labelDiv=document.createElement("div");
-                    labelDiv.classList.add("object-label");
-                    labelDiv.textContent=objectLabels[index];
-                    document.body.appendChild(labelDiv);
-                    objectLabelMap.set(mesh,labelDiv);
-                    if(objectLinks[index]) {
-                        labelDiv.addEventListener('click',()=>{document.body.classList.add('transition-out');setTimeout(()=>{window.location.href=objectLinks[index];},500);});
+                    if (file === "IA.glb") {
+                        mesh.position.y = -90;
                     }
+
+                    objectLabelMap.set(mesh, labelDiv);
+                });
+            }
+
+            if (objectLinks[index]) {
+                labelDiv.addEventListener('click', () => {
+                    document.body.classList.add('transition-out');
+                    setTimeout(() => {
+                        window.location.href = objectLinks[index];
+                    }, 500);
                 });
             }
         });
 
-        engine.runRenderLoop(()=>{
+        engine.runRenderLoop(() => {
             scene.render();
-            objectLabelMap.forEach((labelDiv, mesh)=>{
-                if(!mesh) return;
-                const bb = mesh.getBoundingInfo().boundingBox;
+            objectLabelMap.forEach((labelDiv, mesh) => {
+                if (!mesh) return;
+
+                const boundingBox = mesh.getBoundingInfo().boundingBox;
                 const bottomCenter = new BABYLON.Vector3(
-                    (bb.minimumWorld.x + bb.maximumWorld.x)/2,
-                    bb.minimumWorld.y - 10,
-                    (bb.minimumWorld.z + bb.maximumWorld.z)/2
+                    (boundingBox.minimumWorld.x + boundingBox.maximumWorld.x) / 2,
+                    boundingBox.minimumWorld.y - 10,
+                    (boundingBox.minimumWorld.z + boundingBox.maximumWorld.z) / 2
                 );
-                const pos = BABYLON.Vector3.Project(bottomCenter, BABYLON.Matrix.IdentityReadOnly, scene.getTransformMatrix(),
-                    camera.viewport.toGlobal(engine.getRenderWidth(), engine.getRenderHeight()));
-                labelDiv.style.visibility = (pos.z>=0 && pos.z<=1)?"visible":"hidden";
-                if(pos.z>=0 && pos.z<=1){
+
+                const pos = BABYLON.Vector3.Project(
+                    bottomCenter,
+                    BABYLON.Matrix.IdentityReadOnly,
+                    scene.getTransformMatrix(),
+                    camera.viewport.toGlobal(engine.getRenderWidth(), engine.getRenderHeight())
+                );
+
+                if (pos.z >= 0 && pos.z <= 1) {
                     labelDiv.style.left = `${pos.x}px`;
                     labelDiv.style.top = `${pos.y}px`;
+                    labelDiv.style.visibility = "visible";
+                } else {
+                    labelDiv.style.visibility = "hidden";
                 }
             });
         });
-
-        window.addEventListener("resize",()=>engine.resize());
-
-        document.getElementById('hamburger-button').addEventListener('click',()=>{
-            document.getElementById('hamburger-button').classList.toggle('open');
-            document.getElementById('menu-overlay').classList.toggle('open');
+        
+        window.addEventListener("resize", () => engine.resize());
+        const hamburgerButton = document.getElementById('hamburger-button');
+        const menuOverlay = document.getElementById('menu-overlay');
+        hamburgerButton.addEventListener('click', () => {
+            hamburgerButton.classList.toggle('open');
+            menuOverlay.classList.toggle('open');
+        });
+        const customText = document.getElementById("customText");
+        customText.addEventListener("click", () => {
+            customText.classList.toggle("zoomed");
+        });
+        document.addEventListener("DOMContentLoaded", () => {
+            const scrollButton = document.getElementById('scrollButton');
+            if (scrollButton) {
+                scrollButton.addEventListener('click', () => {
+                    const rotationIncrement = 30 * (Math.PI / 180);
+                    BABYLON.Animation.CreateAndStartAnimation(
+                        "scrollCam",
+                        camera,
+                        "alpha",
+                        60,
+                        60,
+                        camera.alpha,
+                        camera.alpha + rotationIncrement,
+                        BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT,
+                        new BABYLON.CubicEase()
+                    );
+                });
+            }
+            const linkButton = document.getElementById('linkButton');
+            if (linkButton) {
+                linkButton.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    document.body.classList.add('transition-out');
+                    setTimeout(() => {
+                        window.location.href = 'page2.html';
+                    }, 500);
+                });
+            }
         });
 
-        document.getElementById("customText").addEventListener("click", ()=>{
-            document.getElementById("customText").classList.toggle("zoomed");
-        });
-
-        const scrollButton = document.getElementById('scrollButton');
-        if(scrollButton){
-            scrollButton.addEventListener('click', ()=>{
-                const rotationIncrement = 30 * (Math.PI/180);
-                BABYLON.Animation.CreateAndStartAnimation(
-                    "scrollCam",
-                    camera,
-                    "alpha",
-                    60,
-                    60,
-                    camera.alpha,
-                    camera.alpha + rotationIncrement,
-                    BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT,
-                    new BABYLON.CubicEase()
-                );
-            });
-        }
-
-        supportsWebP((isSupported)=>{
-            const panoFile = isSupported ? "test7.webp" : "abstract1.png";
-            createPhotoDome(panoFile);
-        });
-
-        function supportsWebP(callback){
-            const img=new Image();
-            img.onload=()=>callback(img.width>0 && img.height>0);
-            img.onerror=()=>callback(false);
-            img.src="data:image/webp;base64,UklGRiIAAABXRUJQVlA4TCEAAAAvAAAAAA...";
-        }
-
-        function animateCameraSpin(){
-            const initialCameraAlphaOffset=-Math.PI/8;
-            camera.alpha=Math.PI+initialCameraAlphaOffset;
-            camera.beta=Math.PI/2;
-            camera.radius=450;
+        function animateCameraSpin() {
+            const initialCameraAlphaOffset = -Math.PI / 8;
+            camera.alpha = Math.PI + initialCameraAlphaOffset;
+            camera.beta = Math.PI / 2;
+            camera.radius = 450;
             BABYLON.Animation.CreateAndStartAnimation(
                 "cameraSpin",
                 camera,
@@ -388,15 +482,15 @@
                 60,
                 120,
                 camera.alpha,
-                camera.alpha + (2*Math.PI)/3,
+                camera.alpha + (2 * Math.PI) / 3,
                 BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT,
                 new BABYLON.CubicEase()
             );
-            setTimeout(()=>{
-                camera.attachControl(canvas,true);
+            setTimeout(() => {
+                camera.attachControl(canvas, true);
                 camera.inputs.add(new BABYLON.ArcRotateCameraPointersInput());
                 camera.inputs.add(new BABYLON.ArcRotateCameraKeyboardInput());
-            },2000);
+            }, 2000);
         }
     </script>
 </body>
