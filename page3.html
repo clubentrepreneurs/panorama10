@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8" />
-    <title>PNG + panorama + menu</title>
+    <title>PNG + panorama + menu + Video</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
     <link href="https://fonts.cdnfonts.com/css/apex-new" rel="stylesheet">
     <style>
@@ -154,30 +154,6 @@
             color: #00AFD7;
             font-weight: bold;
         }
-        .object-label {
-            position: absolute;
-            color: black;
-            background-color: rgba(255, 255, 255, 0.7);
-            padding: 5px 10px;
-            border-radius: 5px;
-            font-family: 'Apex New', sans-serif;
-            font-size: 18px;
-            white-space: nowrap;
-            transform: translate(-50%, 0%);
-            z-index: 10;
-            visibility: hidden;
-            cursor: pointer;
-            transition: transform 0.2s ease-in-out, background-color 0.2s ease-in-out;
-        }
-        @media (min-width: 768px) {
-            .object-label {
-                font-size: 82px;
-            }
-        }
-        .object-label:hover {
-            transform: translate(-50%, 0%) scale(1.05);
-            background-color: rgba(255, 255, 255, 0.9);
-        }
         .actionButton {
             position: fixed;
             bottom: 20px;
@@ -199,14 +175,68 @@
         #scrollButton {
             right: 20px;
         }
-        #linkButton {
-            right: 80px;
-            font-size: 16px;
-        }
         body.transition-out {
             transition: opacity 0.5s ease-in-out;
             opacity: 0;
         }
+
+        /* Styles pour la modale vidéo */
+        #video-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 3000; /* Au-dessus de tout le reste */
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease-in-out, visibility 0s linear 0.3s;
+        }
+        #video-modal-overlay.visible {
+            opacity: 1;
+            visibility: visible;
+            transition: opacity 0.3s ease-in-out;
+        }
+        #video-modal-content {
+            position: relative;
+            width: 90%; /* Occupe 90% de la largeur */
+            max-width: 960px; /* Limite la largeur maximale */
+            height: 50%; /* Occupe la moitié de la hauteur de la page */
+            background-color: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+        }
+        #video-iframe {
+            width: 100%;
+            height: 100%; /* L'iframe prend toute la hauteur du conteneur */
+            border: none;
+        }
+        #close-video-modal {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #E5005B;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 3001;
+        }
+
+        /* Media queries pour les tailles d'écran */
         @media (min-width: 768px) {
             #menu-overlay h2 {
                 font-size: 28px;
@@ -246,6 +276,13 @@
     </div>
     <button id="scrollButton" class="actionButton">
         &#x21bb; </button>
+
+    <div id="video-modal-overlay">
+        <div id="video-modal-content">
+            <button id="close-video-modal">&times;</button>
+            <iframe id="video-iframe" src="" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>
+        </div>
+    </div>
     
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
     <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
@@ -257,10 +294,11 @@
         
         const camera = new BABYLON.ArcRotateCamera("cam", Math.PI / 2, Math.PI / 2, 450, new BABYLON.Vector3(0, 0, 0), scene);
         camera.attachControl(canvas, true);
-        camera.inputs.clear();
+        camera.inputs.clear(); // Désactiver les contrôles de la caméra au démarrage
         new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
         let panoLoaded = false;
-        let surmonterImage;
+        let surmonterImageMesh; // Renommé pour plus de clarté
+        let surmonterLabelDiv; // Div HTML pour le label cliquable
 
         function supportsWebP(callback) {
             const img = new Image();
@@ -292,6 +330,14 @@
 
         // Ajout de l'image "surmonter.png"
         function createSurmonterImage() {
+            // Créer un div HTML pour le label/bouton cliquable
+            surmonterLabelDiv = document.createElement("div");
+            surmonterLabelDiv.classList.add("object-label"); // Réutiliser la classe existante ou en créer une nouvelle
+            surmonterLabelDiv.textContent = "SURMONTER"; // Texte pour l'image cliquable
+            surmonterLabelDiv.style.visibility = "hidden"; // Cacher au début
+            document.body.appendChild(surmonterLabelDiv);
+
+            // Charger l'image sur une texture pour la positionner dans la scène
             const texture = new BABYLON.Texture("surmonter.png", scene);
             const material = new BABYLON.StandardMaterial("surmonterMat", scene);
             material.diffuseTexture = texture;
@@ -299,16 +345,17 @@
             material.backFaceCulling = false;
             material.alpha = 1;
 
-            const size = 100; // Taille de l'image, ajustez au besoin
-            const plane = BABYLON.MeshBuilder.CreatePlane("surmonterPlane", { width: size, height: size }, scene);
-            plane.material = material;
+            const size = 150; // Taille de l'image, ajustez au besoin
+            surmonterImageMesh = BABYLON.MeshBuilder.CreatePlane("surmonterPlane", { width: size, height: size }, scene);
+            surmonterImageMesh.material = material;
             
-            // Lier le plan à la caméra
-            plane.parent = camera;
-            // Positionner le plan à une certaine distance devant la caméra et légèrement en haut
-            plane.position = new BABYLON.Vector3(0, 20, 100); 
+            // Positionner l'image dans la scène (coordonnées fixes)
+            surmonterImageMesh.position = new BABYLON.Vector3(200, 0, 0); // Exemple: 200 unités sur l'axe X (à droite du centre)
+            // Faire en sorte que le plan "regarde" toujours le centre de la scène (où se trouve la caméra au début)
+            surmonterImageMesh.lookAt(new BABYLON.Vector3(0, 0, 0));
 
-            surmonterImage = plane;
+            // Ajouter un identifiant unique ou une propriété pour identifier ce mesh
+            surmonterImageMesh.isClickable = true;
         }
 
         supportsWebP((isSupported) => {
@@ -316,10 +363,30 @@
             createPhotoDome(panoFile);
         });
 
-        createSurmonterImage(); // Créer l'image sur le plan
+        createSurmonterImage(); // Créer l'image sur le plan et son div cliquable
 
         engine.runRenderLoop(() => {
             scene.render();
+            // Mettre à jour la position du label "SURMONTER"
+            if (surmonterImageMesh && surmonterLabelDiv) {
+                const boundingBox = surmonterImageMesh.getBoundingInfo().boundingBox;
+                const center = boundingBox.centerWorld; // Utiliser le centre du mesh pour le label
+
+                const pos = BABYLON.Vector3.Project(
+                    center,
+                    BABYLON.Matrix.IdentityReadOnly,
+                    scene.getTransformMatrix(),
+                    camera.viewport.toGlobal(engine.getRenderWidth(), engine.getRenderHeight())
+                );
+
+                if (pos.z >= 0 && pos.z <= 1) { // Vérifier si le mesh est dans le champ de vision
+                    surmonterLabelDiv.style.left = `${pos.x}px`;
+                    surmonterLabelDiv.style.top = `${pos.y}px`;
+                    surmonterLabelDiv.style.visibility = "visible";
+                } else {
+                    surmonterLabelDiv.style.visibility = "hidden";
+                }
+            }
         });
 
         window.addEventListener("resize", () => engine.resize());
@@ -334,6 +401,7 @@
         customText.addEventListener("click", () => {
             customText.classList.toggle("zoomed");
         });
+        
         document.addEventListener("DOMContentLoaded", () => {
             const scrollButton = document.getElementById('scrollButton');
             if (scrollButton) {
@@ -350,6 +418,13 @@
                         BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT,
                         new BABYLON.CubicEase()
                     );
+                });
+            }
+
+            // Gestionnaire de clic pour le label "SURMONTER"
+            if (surmonterLabelDiv) {
+                surmonterLabelDiv.addEventListener('click', () => {
+                    openVideoModal("surmonter.mp4"); // Ouvrir la vidéo
                 });
             }
         });
@@ -379,6 +454,30 @@
                 camera.inputs.add(new BABYLON.ArcRotateCameraKeyboardInput());
             }, 2000);
         }
+
+        // Logique de la modale vidéo
+        const videoModalOverlay = document.getElementById('video-modal-overlay');
+        const videoIframe = document.getElementById('video-iframe');
+        const closeVideoModalButton = document.getElementById('close-video-modal');
+
+        function openVideoModal(videoSrc) {
+            videoIframe.src = videoSrc;
+            videoModalOverlay.classList.add('visible');
+        }
+
+        function closeVideoModal() {
+            videoIframe.src = ""; // Arrêter la lecture de la vidéo
+            videoModalOverlay.classList.remove('visible');
+        }
+
+        closeVideoModalButton.addEventListener('click', closeVideoModal);
+
+        // Fermer la modale en cliquant en dehors (si désiré)
+        videoModalOverlay.addEventListener('click', (event) => {
+            if (event.target === videoModalOverlay) {
+                closeVideoModal();
+            }
+        });
     </script>
 </body>
 </html>
