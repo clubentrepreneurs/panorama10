@@ -373,7 +373,7 @@
         gifLabels.forEach((text, index) => {
             const labelDiv = document.createElement("div");
             labelDiv.classList.add("object-label");
-            labelDiv.textContent = text;
+            labelDiv.innerHTML = text;
 
             // ✅ Ajout du clic sur le label
             labelDiv.addEventListener("click", () => {
