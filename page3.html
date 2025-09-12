@@ -196,9 +196,9 @@
 
         /* Plus grands sur ordinateur */
 @media (min-width: 768px) {
-  .object-label {
-    font-size: 82px;
-  }
+    .object-label {
+        font-size: 82px;
+    }
 }
         .object-label:hover {
             transform: translate(-50%, 0%) scale(1.05);
@@ -234,7 +234,7 @@
             opacity: 0;
         }
 
- /* === Augmentation des polices uniquement sur ordinateur === */
+/* === Augmentation des polices uniquement sur ordinateur === */
     @media (min-width: 768px) {
       #menu-overlay h2 {
         font-size: 28px;
@@ -246,10 +246,6 @@
         font-size: 24px;
       }
     }
-
-
-
-        
     </style>
 </head>
 <body>
@@ -341,91 +337,22 @@
         });
 
         const objectLabelMap = new Map();
-        const glbFiles = ["bluebot.glb", "IA.glb", "labonumerique.glb"]; // Ordre ajusté pour centrer bluebot
-        const objectLabels = [
-            "Réussir sa rentrée", // Label pour "bluebot.glb"
-            "Outils IA d'aide à la réussite", // Label pour "IA.glb"
-            "Le laboratoire numérique des compétences" // Label pour "labonumerique.glb"
-        ];
-        const objectLinks = [
-            "https://clubentrepreneurs.github.io/panorama10/page2.html",  // Lien pour "bluebot.glb"
-            "https://clubentrepreneurs.github.io/panorama10/page3.html", // Lien pour "IA.glb"
-            "https://clubentrepreneurs.github.io/panorama10/page4.html" // Lien pour "labonumerique.glb"
-        ];
+        // La liste des fichiers GLB est vide
+        const glbFiles = []; 
+        // La liste des labels est vide
+        const objectLabels = []; 
+        // La liste des liens est vide
+        const objectLinks = []; 
 
-        const radius = 400; // Rayon de placement des GLB autour du centre
-        const angleIncrement = (2 * Math.PI) / glbFiles.length; // 120 degrés en radians
+        const radius = 400; 
+        const angleIncrement = (2 * Math.PI) / glbFiles.length;
 
-        glbFiles.forEach((file, index) => {
-            BABYLON.SceneLoader.ImportMesh("", "./", file, scene, function(meshes, particleSystems, skeletons, animationGroups) {
-                if (!meshes || meshes.length === 0) {
-                    console.warn(`Aucun mesh trouvé dans ${file}.`);
-                    return;
-                }
-                const mesh = meshes[0];
-                if (animationGroups) {
-                    animationGroups.forEach(ag => ag.start(true));
-                }
-                
-                // Échelle de base pour tous les modèles
-                mesh.scaling = new BABYLON.Vector3(50, 50, 50);
-
-                // --- DÉBUT DE LA ZONE DE MODIFICATION POUR LA TAILLE ET LA POSITION Y DE LABONUMERIQUE.GLB ---
-                if (file === "labonumerique.glb") {
-                    // Doubler la taille du modèle (facteur 2.0)
-                    const scaleFactor = 2.0; // <<< Changé à 2.0 pour doubler la taille
-                    mesh.scaling.x *= scaleFactor;
-                    mesh.scaling.y *= scaleFactor;
-                    mesh.scaling.z *= scaleFactor;
-
-                    // Descendre le modèle un peu plus bas verticalement.
-                    // Une valeur plus négative fait descendre le modèle. Ajustez si besoin.
-                    mesh.position.y = -60; // <<< Valeur ajustée pour le descendre
-                }
-                // --- FIN DE LA ZONE DE MODIFICATION ---
-
-                // Créez un TransformNode comme pivot pour chaque GLB
-                const pivot = new BABYLON.TransformNode("pivot_" + index, scene);
-                
-                // Positionnement des GLB sur l'équateur (y=0) à une certaine distance (radius)
-                let angle = index * angleIncrement;
-                
-                pivot.rotation.y = angle; 
-                mesh.parent = pivot;
-                mesh.position.z = radius; // Place le mesh à 'radius' distance du pivot sur son axe Z local
-
-                // Ajustements spécifiques pour chaque mesh pour qu'ils soient sur le "sol"
-                // ou à la bonne hauteur relative à leur base.
-                // Ces valeurs peuvent nécessiter des ajustements précis en fonction des modèles GLB eux-mêmes.
-                if (file === "bluebot.glb") {
-                    mesh.position.y = -190; 
-                } else if (file === "IA.glb") {
-                    mesh.position.y = -90; 
-                } 
-                // La modification pour labonumerique.glb est maintenant dans le bloc "if (file === 'labonumerique.glb')" ci-dessus.
-
-                // Création de l'overlay text pour chaque GLB
-                const labelDiv = document.createElement("div");
-                labelDiv.classList.add("object-label");
-                labelDiv.textContent = objectLabels[index];
-                document.body.appendChild(labelDiv);
-                objectLabelMap.set(mesh, labelDiv);
-
-                // Ajouter le gestionnaire de clic si un lien est défini
-                if (objectLinks[index]) {
-                    labelDiv.addEventListener('click', () => {
-                        document.body.classList.add('transition-out');
-                        setTimeout(() => {
-                            window.location.href = objectLinks[index];
-                        }, 500);
-                    });
-                }
-            });
-        });
+        // La boucle pour charger les GLB a été supprimée, car les tableaux sont vides.
+        // glbFiles.forEach((file, index) => { ... });
 
         engine.runRenderLoop(() => {
             scene.render();
-            // Mettre à jour la position des labels textuels
+            // Mettre à jour la position des labels textuels (la boucle ne s'exécute pas car la carte est vide)
             objectLabelMap.forEach((labelDiv, mesh) => {
                 if (!mesh) return;
 
@@ -433,7 +360,7 @@
                 const boundingBox = mesh.getBoundingInfo().boundingBox;
                 const bottomCenter = new BABYLON.Vector3(
                     (boundingBox.minimumWorld.x + boundingBox.maximumWorld.x) / 2,
-                    boundingBox.minimumWorld.y - 10, // Un petit offset pour le placer sous le modèle
+                    boundingBox.minimumWorld.y - 10,
                     (boundingBox.minimumWorld.z + boundingBox.maximumWorld.z) / 2
                 );
 
@@ -444,7 +371,7 @@
                     camera.viewport.toGlobal(engine.getRenderWidth(), engine.getRenderHeight())
                 );
 
-                if (pos.z >= 0 && pos.z <= 1) { // Vérifier si le mesh est dans le champ de vision
+                if (pos.z >= 0 && pos.z <= 1) {
                     labelDiv.style.left = `${pos.x}px`;
                     labelDiv.style.top = `${pos.y}px`;
                     labelDiv.style.visibility = "visible";
