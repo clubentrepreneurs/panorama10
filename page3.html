@@ -20,30 +20,6 @@
             touch-action: none;
             background-color: transparent !important;
         }
-        /* --- DÉBUT DE LA ZONE DE MODIFICATION --- */
-        /* La classe .hidden sur renderCanvas ne sera plus utilisée initialement */
-        /* #renderCanvas.hidden {
-            visibility: hidden;
-        } */
-        /* Le conteneur Lottie n'est plus nécessaire */
-        /* #lottie-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: white;
-            z-index: 9999;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            transition: opacity 1s ease-in-out;
-        }
-        #lottie-container.fade-out {
-            opacity: 0;
-            pointer-events: none;
-        } */
-        /* --- FIN DE LA ZONE DE MODIFICATION --- */
         #customText {
             position: absolute;
             bottom: 5vh;
@@ -91,8 +67,8 @@
             z-index: 1001;
         }
         #hamburger-button {
-            width: 60px; /* Augmenté de 40px à 60px (40 * 1.5) */
-            height: 35px; /* On garde la hauteur pour la bonne proportion des traits */
+            width: 60px;
+            height: 35px;
             cursor: pointer;
             display: flex;
             flex-direction: column;
@@ -102,7 +78,7 @@
             padding: 0;
         }
         #hamburger-button .line {
-            width: 100%; /* S'adapte à la largeur du bouton */
+            width: 100%;
             height: 6px;
             background-color: #E5005B;
             transition: all 0.3s ease-in-out;
@@ -125,7 +101,7 @@
             font-family: 'Apex New', sans-serif;
             font-weight: bold;
             color: #E5005B;
-            font-size: 21px; /* Augmenté de 14px à 21px (14 * 1.5) */
+            font-size: 21px;
             white-space: nowrap;
         }
         #menu-overlay {
@@ -194,12 +170,11 @@
             transition: transform 0.2s ease-in-out, background-color 0.2s ease-in-out;
         }
 
-        /* Plus grands sur ordinateur */
-@media (min-width: 768px) {
-    .object-label {
-        font-size: 82px;
-    }
-}
+        @media (min-width: 768px) {
+            .object-label {
+                font-size: 82px;
+            }
+        }
         .object-label:hover {
             transform: translate(-50%, 0%) scale(1.05);
             background-color: rgba(255, 255, 255, 0.9);
@@ -234,18 +209,17 @@
             opacity: 0;
         }
 
-/* === Augmentation des polices uniquement sur ordinateur === */
-    @media (min-width: 768px) {
-      #menu-overlay h2 {
-        font-size: 28px;
-      }
-      #menu-overlay ul li a {
-        font-size: 24px;
-      }
-      #hamburger-label {
-        font-size: 24px;
-      }
-    }
+        @media (min-width: 768px) {
+            #menu-overlay h2 {
+                font-size: 28px;
+            }
+            #menu-overlay ul li a {
+                font-size: 24px;
+            }
+            #hamburger-label {
+                font-size: 24px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -322,10 +296,9 @@
 
         const objectLabelMap = new Map();
         
-        // --- CODE MIS À JOUR POUR LES GIFS ---
         const gifUrls = [
             "https://i.giphy.com/media/l0HlTLw7b7X135e6c/giphy.gif",
-            "https://www.flaticon.com/free-animated-icon/focus_15579010?term=focus&page=1&position=2&origin=search&related_id=15579010", // Le GIF local
+            "focus.gif",
             "https://i.giphy.com/media/l0HlG5qfF9qg8m1rW/giphy.gif",
             "https://i.giphy.com/media/l0HlD5q3f5qXw939C/giphy.gif",
             "https://i.giphy.com/media/l0HlSgT3784T5G10P/giphy.gif",
@@ -336,6 +309,25 @@
             "https://i.giphy.com/media/l0HlD5q3f5qXw939C/giphy.gif"
         ];
         
+        const gifLabels = [
+            "GIF 1", "GIF 2", "GIF 3", "GIF 4", "GIF 5",
+            "GIF 6", "GIF 7", "GIF 8", "GIF 9", "GIF 10"
+        ];
+
+        // --- NOUVEAU : LIENS YOUTUBE ---
+        const youtubeLinks = [
+            "https://www.youtube.com/watch?v=video1",
+            "https://www.youtube.com/watch?v=video2",
+            "https://www.youtube.com/watch?v=video3",
+            "https://www.youtube.com/watch?v=video4",
+            "https://www.youtube.com/watch?v=video5",
+            "https://www.youtube.com/watch?v=video6",
+            "https://www.youtube.com/watch?v=video7",
+            "https://www.youtube.com/watch?v=video8",
+            "https://www.youtube.com/watch?v=video9",
+            "https://www.youtube.com/watch?v=video10"
+        ];
+        
         const radius = 450; 
         const gifSize = 100;
         const angleIncrement = (2 * Math.PI) / gifUrls.length;
@@ -343,13 +335,10 @@
 
         gifUrls.forEach((url, index) => {
             let texture;
-            // Vérifier si l'URL est un fichier local (ou si elle ne provient pas de Giphy, par exemple)
-            // Si le nom du fichier se termine par .gif, on utilise VideoTexture
             if (url.endsWith('.gif')) {
                 texture = new BABYLON.VideoTexture("gif-" + index, url, scene, true, false);
-                texture.vScale = -1; // Inverser verticalement si le GIF est à l'envers
+                texture.vScale = -1;
             } else {
-                // Utiliser Texture pour les images non-animées ou autres formats
                 texture = new BABYLON.Texture(url, scene);
             }
 
@@ -365,15 +354,25 @@
             plane.position.x = radius * Math.sin(angle);
             plane.position.z = radius * Math.cos(angle);
             plane.rotation.y = -angle;
+            
+            // --- AJOUT DE L'ÉVÉNEMENT DE CLIC SUR LE PLAN ---
+            plane.actionManager = new BABYLON.ActionManager(scene);
+            plane.actionManager.registerAction(
+                new BABYLON.ExecuteCodeAction(
+                    BABYLON.ActionManager.OnPickTrigger,
+                    function (evt) {
+                        const clickedMesh = evt.source;
+                        const meshIndex = gifMeshes.indexOf(clickedMesh);
+                        if (meshIndex !== -1 && youtubeLinks[meshIndex]) {
+                            window.open(youtubeLinks[meshIndex], '_blank');
+                        }
+                    }
+                )
+            );
 
             gifMeshes.push(plane);
         });
 
-        const gifLabels = [
-            "VIDEO 1", "VIDEO 2", "GIF 3", "GIF 4", "GIF 5",
-            "GIF 6", "GIF 7", "GIF 8", "GIF 9", "GIF 10"
-        ];
-        
         const gifLabelDivs = [];
         gifLabels.forEach((text, index) => {
             const labelDiv = document.createElement("div");
