@@ -1,497 +1,151 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8" />
-    <title>GIF + panorama + menu</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-    <link href="https://fonts.cdnfonts.com/css/apex-new" rel="stylesheet">
-    <style>
-        html, body {
-            margin: 0;
-            overflow: hidden;
-            height: 100%;
-            touch-action: none;
-            background: none;
-        }
-        #renderCanvas {
-            width: 100%;
-            height: 100%;
-            display: block;
-            touch-action: none;
-            background-color: transparent !important;
-        }
-        #customText {
-            position: absolute;
-            bottom: 5vh;
-            left: 50%;
-            transform: translateX(-50%);
-            font-family: 'Apex New', sans-serif;
-            font-size: clamp(24px, 4vw, 48px);
-            font-weight: heavy;
-            text-align: center;
-            color: black;
-            z-index: 2000;
-            line-height: 1.2;
-            background-color: transparent;
-            padding: 1em 2em;
-            border-radius: 0;
-            max-width: 90vw;
-            word-wrap: break-word;
-            cursor: pointer;
-            transition: font-size 0.3s ease-in-out;
-        }
-        #customText.zoomed {
-            font-size: clamp(36px, 6vw, 72px);
-            transform: translateX(-50%) scale(1.1);
-        }
-        @keyframes bounceIn {
-            0% {
-                opacity: 0;
-                transform: translate(-50%, -200%) scale(0.3);
-            }
-            60% {
-                opacity: 1;
-                transform: translate(-50%, 20%) scale(1.05);
-            }
-            80% {
-                transform: translate(-50%, -10%) scale(0.95);
-            }
-            100% {
-                transform: translate(-50%, 0) scale(1);
-            }
-        }
-        #menu-container {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            z-index: 1001;
-        }
-        #hamburger-button {
-            width: 60px;
-            height: 35px;
-            cursor: pointer;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            background: none;
-            border: none;
-            padding: 0;
-        }
-        #hamburger-button .line {
-            width: 100%;
-            height: 6px;
-            background-color: #E5005B;
-            transition: all 0.3s ease-in-out;
-        }
-        #hamburger-button.open .line:nth-child(1) {
-            transform: translateY(14px) rotate(45deg);
-        }
-        #hamburger-button.open .line:nth-child(2) {
-            opacity: 0;
-        }
-        #hamburger-button.open .line:nth-child(3) {
-            transform: translateY(-14px) rotate(-45deg);
-        }
-        #hamburger-label {
-            position: absolute;
-            top: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            margin-top: 5px;
-            font-family: 'Apex New', sans-serif;
-            font-weight: bold;
-            color: #E5005B;
-            font-size: 21px;
-            white-space: nowrap;
-        }
-        #menu-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 250px;
-            height: 100%;
-            background-color: rgba(255, 255, 255, 0.9);
-            z-index: 1000;
-            transform: translateX(-100%);
-            transition: transform 0.3s ease-in-out;
-            padding: 100px 20px 20px;
-            box-shadow: 2px 0 5px rgba(0,0,0,0.5);
-            font-family: 'Apex New', sans-serif;
-            box-sizing: border-box;
-            display: flex;
-            flex-direction: column;
-        }
-        #menu-overlay.open {
-            transform: translateX(0);
-        }
-        #menu-overlay h2 {
-            font-size: 20px;
-            font-weight: bold;
-            color: #000;
-            border-bottom: 2px solid #00AFD7;
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-        #menu-overlay ul {
-            list-style: disc;
-            padding: 0 0 0 20px;
-            margin: 0;
-        }
-        #menu-overlay ul li {
-            margin-bottom: 15px;
-        }
-        #menu-overlay ul li a {
-            text-decoration: none;
-            color: black;
-            font-size: 16px;
-            font-weight: normal;
-            display: block;
-            padding: 5px 0;
-            transition: color 0.3s ease;
-        }
-        #menu-overlay ul li a:hover {
-            color: #00AFD7;
-            font-weight: bold;
-        }
-        .object-label {
-            position: absolute;
-            color: black;
-            background-color: rgba(255, 255, 255, 0.7);
-            padding: 5px 10px;
-            border-radius: 5px;
-            font-family: 'Apex New', sans-serif;
-            font-size: 18px;
-            white-space: nowrap;
-            transform: translate(-50%, 0%);
-            z-index: 10;
-            visibility: hidden;
-            cursor: pointer;
-            transition: transform 0.2s ease-in-out, background-color 0.2s ease-in-out;
-        }
-        @media (min-width: 768px) {
-            .object-label {
-                font-size: 82px;
-            }
-        }
-        .object-label:hover {
-            transform: translate(-50%, 0%) scale(1.05);
-            background-color: rgba(255, 255, 255, 0.9);
-        }
-        .actionButton {
-            position: fixed;
-            bottom: 20px;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background-color: #E5005B;
-            border: none;
-            color: white;
-            font-size: 24px;
-            cursor: pointer;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
-        }
-        #scrollButton {
-            right: 20px;
-        }
-        #linkButton {
-            right: 80px;
-            font-size: 16px;
-        }
-        body.transition-out {
-            transition: opacity 0.5s ease-in-out;
-            opacity: 0;
-        }
-        @media (min-width: 768px) {
-            #menu-overlay h2 {
-                font-size: 28px;
-            }
-            #menu-overlay ul li a {
-                font-size: 24px;
-            }
-            #hamburger-label {
-                font-size: 24px;
-            }
-        }
-    </style>
+<meta charset="UTF-8">
+<title>Vidéo + panorama + menu</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<link href="https://fonts.cdnfonts.com/css/apex-new" rel="stylesheet">
+<style>
+html,body{margin:0;overflow:hidden;height:100%;background:none;}
+#renderCanvas{width:100%;height:100%;display:block;background:transparent;}
+.object-label{position:absolute;color:black;background:rgba(255,255,255,0.7);padding:5px 10px;border-radius:5px;font-family:'Apex New',sans-serif;font-size:18px;white-space:nowrap;transform:translate(-50%,0%);z-index:10;visibility:hidden;cursor:pointer;transition:transform 0.2s ease-in-out,background-color 0.2s ease-in-out;}
+@media(min-width:768px){.object-label{font-size:82px;}}
+.object-label:hover{transform:translate(-50%,0%) scale(1.05);background-color:rgba(255,255,255,0.9);}
+#videoModal{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:50vw;height:50vh;background:black;z-index:9999;display:none;flex-direction:column;}
+#videoModal iframe{width:100%;height:100%;}
+#closeVideo{position:absolute;top:5px;right:5px;color:white;font-size:24px;cursor:pointer;z-index:10000;}
+</style>
 </head>
 <body>
-    <canvas id="renderCanvas"></canvas>
-    <div id="customText">
-        <br>
-    </div>
-    
-    <div id="menu-container">
-        <button id="hamburger-button">
-            <span class="line"></span>
-            <span class="line"></span>
-            <span class="line"></span>
-        </button>
-        <span id="hamburger-label">MENU</span>
-    </div>
-    
-    <div id="menu-overlay">
-        <h2>Toutes vos ressources pour réussir à l'Université</h2>
-        <ul>
-            <li><a href="indexsansjson.html">Page d'accueil</a></li>
-            <li><a href="page2.html">Vidéos "Réussir votre rentrée 2025"</a></li>
-            <li><a href="page3.html">Outils IA d'aide à la réussite</a></li>
-            <li><a href="page4.html">Le laboratoire numérique : boostez votre réussite grâce à vos compétences!</a></li>
-        </ul>
-    </div>
-    <button id="scrollButton" class="actionButton">
-        &#x21bb; </button>
-    
-    <script src="https://cdn.babylonjs.com/babylon.js"></script>
-    <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
-    <script>
-        const canvas = document.getElementById("renderCanvas");
-        const engine = new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true, alpha: true });
-        const scene = new BABYLON.Scene(engine);
-        scene.clearColor = new BABYLON.Color4(0, 0, 0, 0);
-        
-        const camera = new BABYLON.ArcRotateCamera("cam", Math.PI / 2, Math.PI / 2, 450, new BABYLON.Vector3(0, 0, 0), scene);
-        camera.attachControl(canvas, true);
-        camera.inputs.clear();
-        new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0,1,0), scene);
-        let panoLoaded = false;
+<canvas id="renderCanvas"></canvas>
 
-        function supportsWebP(callback) {
-            const img = new Image();
-            img.onload = () => callback(img.width > 0 && img.height > 0);
-            img.onerror = () => callback(false);
-            img.src = "data:image/webp;base64,UklGRiIAAABXRUJQVlA4TCEAAAAvAAAAAA...";
-        }
-        function createPhotoDome(panoFile) {
-            const dome = new BABYLON.PhotoDome("panorama", panoFile + "?v=" + Date.now(), { resolution: 32, size: 1000 }, scene);
-            dome.imageMode = BABYLON.PhotoDome.MODE_MONOSCOPIC;
-            dome.onReady = () => {
-                panoLoaded = true;
-                animateCameraSpin();
-            };
-            const domeMat = dome.mesh.material;
-            if (panoFile.endsWith(".jpg") || panoFile.endsWith(".jpeg")) {
-                domeMat.diffuseTexture.hasAlpha = false;
-                domeMat.useAlphaFromDiffuseTexture = false;
-                domeMat.transparencyMode = BABYLON.Material.MATERIAL_OPAQUE;
-            } else {
-                domeMat.diffuseTexture.hasAlpha = true;
-                domeMat.useAlphaFromDiffuseTexture = true;
-                domeMat.transparencyMode = BABYLON.Material.MATERIAL_ALPHABLEND;
-                domeMat.backFaceCulling = false;
-                domeMat.needDepthPrePass = true;
-            }
-        }
-        
-        supportsWebP((isSupported) => {
-            const panoFile = isSupported ? "test7.webp" : "abstract1.png";
-            createPhotoDome(panoFile);
-        });
+<div id="videoModal">
+  <div id="closeVideo">&#x2715;</div>
+  <iframe id="ytVideo" src="" frameborder="0" allowfullscreen></iframe>
+</div>
 
-        const objectLabelMap = new Map();
-        // Remplacement de "bluebot.glb" par "focus.gif"
-        const glbFiles = ["focus.gif", "IA.glb", "labonumerique.glb"];
-        const objectLabels = [
-            "Réussir sa rentrée",
-            "Outils IA d'aide à la réussite",
-            "Le laboratoire numérique des compétences"
-        ];
-        const objectLinks = [
-            "https://clubentrepreneurs.github.io/panorama10/page2.html",
-            "https://clubentrepreneurs.github.io/panorama10/page3.html",
-            "https://clubentrepreneurs.github.io/panorama10/page4.html"
-        ];
+<script src="https://cdn.babylonjs.com/babylon.js"></script>
+<script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+<script>
+const canvas=document.getElementById("renderCanvas");
+const engine=new BABYLON.Engine(canvas,true,{preserveDrawingBuffer:true,stencil:true,alpha:true});
+const scene=new BABYLON.Scene(engine);
+scene.clearColor=new BABYLON.Color4(0,0,0,0);
 
-        const radius = 400;
-        const angleIncrement = (2 * Math.PI) / glbFiles.length;
+const camera=new BABYLON.ArcRotateCamera("cam",Math.PI/2,Math.PI/2,450,new BABYLON.Vector3(0,0,0),scene);
+camera.attachControl(canvas,true);
+camera.inputs.clear();
+new BABYLON.HemisphericLight("light",new BABYLON.Vector3(0,1,0),scene);
 
-        glbFiles.forEach((file, index) => {
-            const labelDiv = document.createElement("div");
-            labelDiv.classList.add("object-label");
-            labelDiv.textContent = objectLabels[index];
-            document.body.appendChild(labelDiv);
-            
-            // Nouveau traitement pour le GIF
-            if (file === "focus.gif") {
-                const texture = new BABYLON.VideoTexture("videoTex", file, scene, true, true, BABYLON.Texture.TRILINEAR_SAMPLINGMODE, {
-                    autoPlay: true,
-                    loop: true,
-                    muted: true,
-                    width: 256,
-                    height: 256
-                });
-                
-                const material = new BABYLON.StandardMaterial("gifMat", scene);
-                material.diffuseTexture = texture;
-                material.emissiveTexture = texture;
-                material.backFaceCulling = false;
-                material.disableLighting = true;
-                material.alpha = 1.0;
-                material.alphaMode = BABYLON.Engine.ALPHA_COMBINE;
+const objectLabelMap=new Map();
+const radius=400;
+const angleIncrement=(2*Math.PI)/3;
+const objectLabels=["Réussir sa rentrée","Outils IA d'aide à la réussite","Le laboratoire numérique des compétences"];
+const objectLinks=[ "https://www.youtube.com/watch?v=lUU1G-6klpI&list=PLV8G_tL0jD2JNU3NqxIcULusdtMWeKL5k", "https://clubentrepreneurs.github.io/panorama10/page3.html", "https://clubentrepreneurs.github.io/panorama10/page4.html"];
 
-                const plane = BABYLON.MeshBuilder.CreatePlane("gifPlane", {
-                    width: 150, // Ajustez la taille du plan pour le GIF
-                    height: 150
-                }, scene);
-                plane.material = material;
-                
-                const pivot = new BABYLON.TransformNode("pivot_" + index, scene);
-                let angle = index * angleIncrement;
-                pivot.rotation.y = angle;
-                plane.parent = pivot;
-                plane.position.z = radius;
-                plane.position.y = -80; // Ajustez la position Y pour le placer au bon endroit
+function createPhotoDome(panoFile){
+    const dome=new BABYLON.PhotoDome("panorama",panoFile+"?v="+Date.now(),{resolution:32,size:1000},scene);
+    dome.imageMode=BABYLON.PhotoDome.MODE_MONOSCOPIC;
+    animateCameraSpin();
+    const domeMat=dome.mesh.material;
+    if(panoFile.endsWith(".jpg")||panoFile.endsWith(".jpeg")){
+        domeMat.diffuseTexture.hasAlpha=false;
+        domeMat.useAlphaFromDiffuseTexture=false;
+        domeMat.transparencyMode=BABYLON.Material.MATERIAL_OPAQUE;
+    }else{
+        domeMat.diffuseTexture.hasAlpha=true;
+        domeMat.useAlphaFromDiffuseTexture=true;
+        domeMat.transparencyMode=BABYLON.Material.MATERIAL_ALPHABLEND;
+        domeMat.backFaceCulling=false;
+        domeMat.needDepthPrePass=true;
+    }
+}
 
-                objectLabelMap.set(plane, labelDiv);
+// --- Création du GIF/vidéo plane ---
+const pivot0=new BABYLON.TransformNode("pivot0",scene);
+pivot0.rotation.y=0;
+const gifPlane=BABYLON.MeshBuilder.CreatePlane("gifPlane",{width:100,height:100},scene);
+gifPlane.position.y=-190;
+gifPlane.position.z=radius;
+gifPlane.parent=pivot0;
+const gifMat=new BABYLON.StandardMaterial("gifMat",scene);
+const gifTexture=new BABYLON.VideoTexture("gifTex",["focus.mp4"],scene,true,true,BABYLON.VideoTexture.TRILINEAR_SAMPLINGMODE,{autoPlay:true,loop:true,autoUpdateTexture:true});
+gifMat.diffuseTexture=gifTexture;
+gifMat.opacityTexture=gifTexture;
+gifMat.backFaceCulling=false;
+gifPlane.material=gifMat;
 
-                // Ajoutez le comportement pour que le plan suive la caméra
-                scene.onBeforeRenderObservable.add(() => {
-                    plane.lookAt(camera.position);
-                });
-                
-            } else { // Traitement existant pour les fichiers GLB
-                BABYLON.SceneLoader.ImportMesh("", "./", file, scene, function(meshes, particleSystems, skeletons, animationGroups) {
-                    if (!meshes || meshes.length === 0) {
-                        console.warn(`Aucun mesh trouvé dans ${file}.`);
-                        return;
-                    }
-                    const mesh = meshes[0];
-                    if (animationGroups) {
-                        animationGroups.forEach(ag => ag.start(true));
-                    }
-                    
-                    mesh.scaling = new BABYLON.Vector3(50, 50, 50);
+// Label pour le GIF
+const labelDiv=document.createElement("div");
+labelDiv.classList.add("object-label");
+labelDiv.textContent=objectLabels[0];
+document.body.appendChild(labelDiv);
+objectLabelMap.set(gifPlane,labelDiv);
 
-                    if (file === "labonumerique.glb") {
-                        const scaleFactor = 2.0;
-                        mesh.scaling.x *= scaleFactor;
-                        mesh.scaling.y *= scaleFactor;
-                        mesh.scaling.z *= scaleFactor;
-                        mesh.position.y = -60;
-                    }
+// Clic ouvre la vidéo YouTube
+gifPlane.actionManager=new BABYLON.ActionManager(scene);
+gifPlane.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnPickTrigger, ()=>{
+    const videoModal=document.getElementById("videoModal");
+    const ytVideo=document.getElementById("ytVideo");
+    ytVideo.src="https://www.youtube.com/embed/lUU1G-6klpI?autoplay=1";
+    videoModal.style.display="flex";
+}));
 
-                    const pivot = new BABYLON.TransformNode("pivot_" + index, scene);
-                    let angle = index * angleIncrement;
-                    
-                    pivot.rotation.y = angle;
-                    mesh.parent = pivot;
-                    mesh.position.z = radius;
+document.getElementById("closeVideo").addEventListener("click",()=>{
+    const videoModal=document.getElementById("videoModal");
+    const ytVideo=document.getElementById("ytVideo");
+    ytVideo.src="";
+    videoModal.style.display="none";
+});
 
-                    if (file === "IA.glb") {
-                        mesh.position.y = -90;
-                    }
+// --- Chargement des autres GLB ---
+const glbFiles=["IA.glb","labonumerique.glb"];
+glbFiles.forEach((file,index)=>{
+    BABYLON.SceneLoader.ImportMesh("", "./", file, scene, function(meshes){
+        if(!meshes || meshes.length==0) return;
+        const mesh=meshes[0];
+        mesh.scaling=new BABYLON.Vector3(50,50,50);
+        if(file==="labonumerique.glb"){mesh.scaling.scaleInPlace(2.0); mesh.position.y=-60;}
+        if(file==="IA.glb") mesh.position.y=-90;
+        const pivot=new BABYLON.TransformNode("pivot"+(index+1),scene);
+        pivot.rotation.y=(index+1)*angleIncrement;
+        mesh.parent=pivot;
+        mesh.position.z=radius;
+        const label=document.createElement("div");
+        label.classList.add("object-label");
+        label.textContent=objectLabels[index+1];
+        document.body.appendChild(label);
+        objectLabelMap.set(mesh,label);
+        label.addEventListener("click",()=>{window.location.href=objectLinks[index+1];});
+    });
+});
 
-                    objectLabelMap.set(mesh, labelDiv);
-                });
-            }
+// --- Render loop ---
+engine.runRenderLoop(()=>{
+    scene.render();
+    objectLabelMap.forEach((labelDiv,mesh)=>{
+        if(!mesh) return;
+        const bb=mesh.getBoundingInfo().boundingBox;
+        const bottomCenter=new BABYLON.Vector3((bb.minimumWorld.x+bb.maximumWorld.x)/2,bb.minimumWorld.y-10,(bb.minimumWorld.z+bb.maximumWorld.z)/2);
+        const pos=BABYLON.Vector3.Project(bottomCenter,BABYLON.Matrix.IdentityReadOnly,scene.getTransformMatrix(),camera.viewport.toGlobal(engine.getRenderWidth(),engine.getRenderHeight()));
+        labelDiv.style.visibility=(pos.z>=0 && pos.z<=1)?"visible":"hidden";
+        if(pos.z>=0 && pos.z<=1){labelDiv.style.left=pos.x+"px"; labelDiv.style.top=pos.y+"px";}
+    });
+});
+window.addEventListener("resize",()=>engine.resize());
 
-            if (objectLinks[index]) {
-                labelDiv.addEventListener('click', () => {
-                    document.body.classList.add('transition-out');
-                    setTimeout(() => {
-                        window.location.href = objectLinks[index];
-                    }, 500);
-                });
-            }
-        });
+function animateCameraSpin(){
+    const initialOffset=-Math.PI/8;
+    camera.alpha=Math.PI+initialOffset;
+    camera.beta=Math.PI/2;
+    camera.radius=450;
+    BABYLON.Animation.CreateAndStartAnimation("cameraSpin",camera,"alpha",60,120,camera.alpha,camera.alpha+(2*Math.PI)/3,BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT,new BABYLON.CubicEase());
+    setTimeout(()=>{camera.attachControl(canvas,true); camera.inputs.add(new BABYLON.ArcRotateCameraPointersInput()); camera.inputs.add(new BABYLON.ArcRotateCameraKeyboardInput());},2000);
+}
 
-        engine.runRenderLoop(() => {
-            scene.render();
-            objectLabelMap.forEach((labelDiv, mesh) => {
-                if (!mesh) return;
-
-                const boundingBox = mesh.getBoundingInfo().boundingBox;
-                const bottomCenter = new BABYLON.Vector3(
-                    (boundingBox.minimumWorld.x + boundingBox.maximumWorld.x) / 2,
-                    boundingBox.minimumWorld.y - 10,
-                    (boundingBox.minimumWorld.z + boundingBox.maximumWorld.z) / 2
-                );
-
-                const pos = BABYLON.Vector3.Project(
-                    bottomCenter,
-                    BABYLON.Matrix.IdentityReadOnly,
-                    scene.getTransformMatrix(),
-                    camera.viewport.toGlobal(engine.getRenderWidth(), engine.getRenderHeight())
-                );
-
-                if (pos.z >= 0 && pos.z <= 1) {
-                    labelDiv.style.left = `${pos.x}px`;
-                    labelDiv.style.top = `${pos.y}px`;
-                    labelDiv.style.visibility = "visible";
-                } else {
-                    labelDiv.style.visibility = "hidden";
-                }
-            });
-        });
-        
-        window.addEventListener("resize", () => engine.resize());
-        const hamburgerButton = document.getElementById('hamburger-button');
-        const menuOverlay = document.getElementById('menu-overlay');
-        hamburgerButton.addEventListener('click', () => {
-            hamburgerButton.classList.toggle('open');
-            menuOverlay.classList.toggle('open');
-        });
-        const customText = document.getElementById("customText");
-        customText.addEventListener("click", () => {
-            customText.classList.toggle("zoomed");
-        });
-        document.addEventListener("DOMContentLoaded", () => {
-            const scrollButton = document.getElementById('scrollButton');
-            if (scrollButton) {
-                scrollButton.addEventListener('click', () => {
-                    const rotationIncrement = 30 * (Math.PI / 180);
-                    BABYLON.Animation.CreateAndStartAnimation(
-                        "scrollCam",
-                        camera,
-                        "alpha",
-                        60,
-                        60,
-                        camera.alpha,
-                        camera.alpha + rotationIncrement,
-                        BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT,
-                        new BABYLON.CubicEase()
-                    );
-                });
-            }
-            const linkButton = document.getElementById('linkButton');
-            if (linkButton) {
-                linkButton.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    document.body.classList.add('transition-out');
-                    setTimeout(() => {
-                        window.location.href = 'page2.html';
-                    }, 500);
-                });
-            }
-        });
-
-        function animateCameraSpin() {
-            const initialCameraAlphaOffset = -Math.PI / 8;
-            camera.alpha = Math.PI + initialCameraAlphaOffset;
-            camera.beta = Math.PI / 2;
-            camera.radius = 450;
-            BABYLON.Animation.CreateAndStartAnimation(
-                "cameraSpin",
-                camera,
-                "alpha",
-                60,
-                120,
-                camera.alpha,
-                camera.alpha + (2 * Math.PI) / 3,
-                BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT,
-                new BABYLON.CubicEase()
-            );
-            setTimeout(() => {
-                camera.attachControl(canvas, true);
-                camera.inputs.add(new BABYLON.ArcRotateCameraPointersInput());
-                camera.inputs.add(new BABYLON.ArcRotateCameraKeyboardInput());
-            }, 2000);
-        }
-    </script>
+// --- Panorama ---
+const panoFile="test7.webp";
+createPhotoDome(panoFile);
+</script>
 </body>
 </html>
